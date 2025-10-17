@@ -32,7 +32,7 @@ type Postgres struct {
 	Host     string `env:"HOST"     envDefault:"localhost" validate:"required,hostname|ip"`
 	Port     int    `env:"PORT"     envDefault:"5432"      validate:"required,min=1024,max=65535"`
 	User     string `env:"USER"     envDefault:"postgres"  validate:"required"`
-	Password string `env:"PASSWORD" envDefault:""          validate:"required"`
+	Password string `env:"PASSWORD"  validate:"required"`
 	DBName   string `env:"DBNAME"   envDefault:"postgres"      validate:"required"`
 	SSLMode  string `env:"SSLMODE"  envDefault:"disable"   validate:"oneof=disable require verify-ca verify-full"`
 }

@@ -8,11 +8,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(pool *pgxpool.Pool, cfg *config.Config) {
+func RegisterRoutes(r chi.Router, pool *pgxpool.Pool, cfg *config.Config) {
 
-	r := chi.NewRouter()
-
-	r.Route("api/v1", func(g chi.Router) {
+	r.Route("/api/v1", func(g chi.Router) {
 		g.Get("/livez", handlers.LivezHandler())
 		g.Get("/readyz", handlers.ReadyzHandler(pool, cfg))
 	})

@@ -113,7 +113,6 @@ func (u *UserWordSetService) Delete(ctx context.Context, id pgtype.UUID) error {
 
 	err := u.queries.DeleteUserWordSet(ctx, id)
 	if err != nil {
-
 		lib.LogError(ctx, u.logger, "UserWordSetService.Delete", "DeleteUserWordSet", "failed to delete user word set", err,
 			slog.String("id", id.String()),
 		)

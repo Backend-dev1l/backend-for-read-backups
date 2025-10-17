@@ -14,9 +14,15 @@ import (
 	"test-http/pkg/logger"
 
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		panic("Error loading .env file")
+	}
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -41,7 +47,7 @@ func main() {
 	r.Use(middleware.Recover(log))
 	r.Use(middleware.RequestLogger(log))
 
-	routes.RegisterRoutes(dbPool, cfg)
+	routes.RegisterRoutes(r, dbPool, cfg)
 
 	srv := &http.Server{
 		Addr:         cfg.Address(),

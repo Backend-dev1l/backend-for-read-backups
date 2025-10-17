@@ -3,16 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 type HealthResponse struct {
 	Status string `json:"status"`
-}
-
-func RegisterHealthRoutes(r chi.Router) {
-	r.Get("/livez", LivezHandler())
 }
 
 func LivezHandler() http.HandlerFunc {
