@@ -47,7 +47,7 @@ func main() {
 	r.Use(middleware.Recover(log))
 	r.Use(middleware.RequestLogger(log))
 
-	routes.RegisterRoutes(r, dbPool, cfg)
+	routes.RegisterRoutes(r, dbPool, cfg, log)
 
 	srv := &http.Server{
 		Addr:         cfg.Address(),
