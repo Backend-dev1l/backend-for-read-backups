@@ -14,19 +14,16 @@ var piiKeys = map[string]bool{
 func maskPII(attr slog.Attr) slog.Attr {
 	key := strings.ToLower(attr.Key)
 
-	// Полностью маскируем
 	if piiKeys[key] {
 		return slog.String(attr.Key, "***REDACTED***")
 	}
 
-	// Частично маскируем email
 	if key == "email" {
 		if val, ok := attr.Value.Any().(string); ok && val != "" {
 			return slog.String(attr.Key, maskEmail(val))
 		}
 	}
 
-	// Частично маскируем телефон
 	if key == "phone" {
 		if val, ok := attr.Value.Any().(string); ok && val != "" {
 			return slog.String(attr.Key, maskPhone(val))

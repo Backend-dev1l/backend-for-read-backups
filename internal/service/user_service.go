@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"errors"
+
 	"fmt"
 	"log/slog"
 
 	"test-http/internal/db"
 	"test-http/internal/lib"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

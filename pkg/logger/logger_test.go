@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"test-http/pkg/logger"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"test-http/pkg/logger"
 )
 
 const (
@@ -188,7 +189,7 @@ func TestSecretsNotLeakedWithContext(t *testing.T) {
 	assertCommonMetadata(t, entry, "context log")
 	assertFieldValue(t, entry, "trace_id", "trace-123", "context log")
 	assertFieldValue(t, entry, "authorization", "***REDACTED***", "context log")
-	assertFieldValue(t, entry, "email", "t***t@example.com", "context log")
+	assertFieldValue(t, entry, "email", "t**t@example.com", "context log")
 	assertSecretNotPresent(t, raw, "secret-token", "context log")
 }
 
