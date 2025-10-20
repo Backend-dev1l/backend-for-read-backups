@@ -21,7 +21,7 @@ var pgContainer *postgres.PostgresContainer
 func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	ctx := context.Background()
-	// Запускаем контейнер postgres 17
+
 	container, err := postgres.RunContainer(
 		ctx,
 		testcontainers.WithImage("postgres:17"),
@@ -113,7 +113,19 @@ func SeedTestData(t *testing.T, pool *pgxpool.Pool, fixturesPath string) {
 
 func applyMigrations(t *testing.T, dsn string) {
 	t.Helper()
-	cmd := exec.Command("atlas", "migrate", "apply", "--url", dsn)
+
+	// Сначала перегенерируем хэши для основной директории миграций
+	hashCmd := exec.Command("atlas", "migrate", "hash", "--dir", "file://migrations")
+	hashCmd.Stdout = os.Stdout
+	hashCmd.Stderr = os.Stderr
+	if err := hashCmd.Run(); err != nil {
+		t.Fatalf("failed to hash migrations: %v", err)
+	}
+
+	// Затем применяем миграции с указанием правильного пути
+	cmd := exec.Command("atlas", "migrate", "apply",
+		"--dir", "file://migrations",
+		"--url", dsn)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
