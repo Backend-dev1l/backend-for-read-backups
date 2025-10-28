@@ -13,14 +13,14 @@ import (
 )
 
 type UserWordSetService struct {
-	queries *db.Queries
-	logger  *slog.Logger
+	userWordRepo *db.Queries
+	logger       *slog.Logger
 }
 
-func NewUserWordSetService(queries *db.Queries, log *slog.Logger) *UserWordSetService {
+func NewUserWordSetService(userWordRepo *db.Queries, log *slog.Logger) *UserWordSetService {
 	return &UserWordSetService{
-		queries: queries,
-		logger:  log,
+		userWordRepo: userWordRepo,
+		logger:       log,
 	}
 }
 
@@ -41,7 +41,7 @@ func (u *UserWordSetService) Create(ctx context.Context, params CreateUserWordSe
 		slog.String("word_set_id", params.WordSetID.String()),
 	)
 
-	wordSet, err := u.queries.CreateUserWordSet(ctx, db.CreateUserWordSetParams{
+	wordSet, err := u.userWordRepo.CreateUserWordSet(ctx, db.CreateUserWordSetParams{
 		UserID:    params.UserID,
 		WordSetID: params.WordSetID,
 	})
@@ -50,7 +50,7 @@ func (u *UserWordSetService) Create(ctx context.Context, params CreateUserWordSe
 			slog.String("user_id", params.UserID.String()),
 			slog.String("word_set_id", params.WordSetID.String()),
 		)
-		return db.UserWordSet{}, fmt.Errorf("create user word set failed: %w", err)
+		return db.UserWordSet{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.Create", "user word set created successfully",
@@ -67,12 +67,12 @@ func (u *UserWordSetService) GetByID(ctx context.Context, id pgtype.UUID) (db.Us
 		slog.String("id", id.String()),
 	)
 
-	wordSet, err := u.queries.GetUserWordSet(ctx, id)
+	wordSet, err := u.userWordRepo.GetUserWordSet(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserWordSetService.GetByID", "GetUserWordSet", "failed to get user word set by id", err,
 			slog.String("id", id.String()),
 		)
-		return db.UserWordSet{}, fmt.Errorf("get user word set by id failed: %w", err)
+		return db.UserWordSet{}, InfrastructureUnexpected.Err()
 	}
 
 	return wordSet, nil
@@ -85,12 +85,12 @@ func (u *UserWordSetService) List(ctx context.Context, filters ListUserWordSetsF
 		slog.Int("offset", int(filters.Offset)),
 	)
 
-	wordSets, err := u.queries.ListUserWordSets(ctx, filters.UserID)
+	wordSets, err := u.userWordRepo.ListUserWordSets(ctx, filters.UserID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserWordSetService.List", "ListUserWordSets", "failed to list user word sets", err,
 			slog.String("user_id", filters.UserID.String()),
 		)
-		return nil, fmt.Errorf("list user word sets failed: %w", err)
+		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.List", "user word sets listed successfully",
@@ -111,12 +111,12 @@ func (u *UserWordSetService) Delete(ctx context.Context, id pgtype.UUID) error {
 		slog.String("id", id.String()),
 	)
 
-	err := u.queries.DeleteUserWordSet(ctx, id)
+	err := u.userWordRepo.DeleteUserWordSet(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserWordSetService.Delete", "DeleteUserWordSet", "failed to delete user word set", err,
 			slog.String("id", id.String()),
 		)
-		return fmt.Errorf("delete user word set failed: %w", err)
+		return InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.Delete", "user word set deleted successfully",

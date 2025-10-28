@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+
 	"testing"
 
 	"encoding/json"
@@ -28,9 +29,7 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("app_user"),
 		postgres.WithPassword("my-password"),
-		testcontainers.WithWaitStrategy(
-			wait.ForListeningPort("5432/tcp"),
-		),
+		testcontainers.WithWaitStrategy(wait.ForListeningPort("5432/tcp")),
 		testcontainers.WithExposedPorts("5432/tcp"),
 	)
 	if err != nil {
@@ -44,14 +43,39 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Fatalf("failed to get connection string: %v", err)
 	}
 
-	applyMigrations(t, uri)
+	t.Logf("🚀 DSN for goose: %s", uri)
 
+	// Применяем миграции
+	err = runMigrations(uri)
+	if err != nil {
+		_ = container.Terminate(ctx)
+		t.Fatalf("failed to apply migrations: %v", err)
+	}
+
+	// Подключаем пул
 	pool, err := pgxpool.New(ctx, uri)
 	if err != nil {
 		_ = container.Terminate(ctx)
 		t.Fatalf("failed to connect to test db: %v", err)
 	}
 	return pool
+}
+
+func runMigrations(dsn string) error {
+	migrationDir := "./migration" // от корня проекта или подстрой
+
+	cmd := exec.Command(
+		"goose",
+		"postgres",
+		dsn,
+		"up",
+		"-dir", migrationDir,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
 }
 
 func TeardownTestDB(t *testing.T, pool *pgxpool.Pool) {
@@ -108,28 +132,6 @@ func SeedTestData(t *testing.T, pool *pgxpool.Pool, fixturesPath string) {
 		if err != nil {
 			t.Fatalf("failed to insert user_progress: %v", err)
 		}
-	}
-}
-
-func applyMigrations(t *testing.T, dsn string) {
-	t.Helper()
-
-	// Сначала перегенерируем хэши для основной директории миграций
-	hashCmd := exec.Command("atlas", "migrate", "hash", "--dir", "file://migrations")
-	hashCmd.Stdout = os.Stdout
-	hashCmd.Stderr = os.Stderr
-	if err := hashCmd.Run(); err != nil {
-		t.Fatalf("failed to hash migrations: %v", err)
-	}
-
-	// Затем применяем миграции с указанием правильного пути
-	cmd := exec.Command("atlas", "migrate", "apply",
-		"--dir", "file://migrations",
-		"--url", dsn)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to apply migrations: %v", err)
 	}
 }
 

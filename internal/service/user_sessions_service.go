@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"fmt"
 	"log/slog"
 
 	"test-http/internal/db"
@@ -13,14 +12,14 @@ import (
 )
 
 type UserSessionService struct {
-	queries *db.Queries
-	logger  *slog.Logger
+	userSessionRepo *db.Queries
+	logger          *slog.Logger
 }
 
-func NewUserSessionService(queries *db.Queries, log *slog.Logger) *UserSessionService {
+func NewUserSessionService(userSessionRepo *db.Queries, log *slog.Logger) *UserSessionService {
 	return &UserSessionService{
-		queries: queries,
-		logger:  log,
+		userSessionRepo: userSessionRepo,
+		logger:          log,
 	}
 }
 
@@ -47,7 +46,7 @@ func (u *UserSessionService) Create(ctx context.Context, params CreateUserSessio
 		slog.String("status", params.Status),
 	)
 
-	session, err := u.queries.CreateUserSession(ctx, db.CreateUserSessionParams{
+	session, err := u.userSessionRepo.CreateUserSession(ctx, db.CreateUserSessionParams{
 		UserID: params.UserID,
 		Status: params.Status,
 	})
@@ -56,7 +55,7 @@ func (u *UserSessionService) Create(ctx context.Context, params CreateUserSessio
 			slog.String("user_id", params.UserID.String()),
 			slog.String("status", params.Status),
 		)
-		return db.UserSession{}, fmt.Errorf("%w: %w", ErrSessionAlreadyExists, err)
+		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.Create", "user session created successfully",
@@ -73,12 +72,12 @@ func (u *UserSessionService) GetByID(ctx context.Context, id pgtype.UUID) (db.Us
 		slog.String("session_id", id.String()),
 	)
 
-	session, err := u.queries.GetUserSession(ctx, id)
+	session, err := u.userSessionRepo.GetUserSession(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionRepository.GetByID", "GetUserSession", "failed to get user session by id", err,
 			slog.String("session_id", id.String()),
 		)
-		return db.UserSession{}, fmt.Errorf("get user session by id failed: %w", err)
+		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}
 
 	return session, nil
@@ -91,12 +90,12 @@ func (u *UserSessionService) List(ctx context.Context, filters ListUserSessionsF
 		slog.Int("offset", int(filters.Offset)),
 	)
 
-	sessions, err := u.queries.ListUserSessions(ctx, filters.UserID)
+	sessions, err := u.userSessionRepo.ListUserSessions(ctx, filters.UserID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.List", "ListUserSessions", "failed to list user sessions", err,
 			slog.String("user_id", filters.UserID.String()),
 		)
-		return nil, fmt.Errorf("list user sessions failed: %w", err)
+		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.List", "user sessions listed successfully",
@@ -110,10 +109,10 @@ func (u *UserSessionService) List(ctx context.Context, filters ListUserSessionsF
 func (u *UserSessionService) ListActive(ctx context.Context) ([]db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionService.ListActive", "listing active sessions")
 
-	sessions, err := u.queries.ListActiveSessions(ctx)
+	sessions, err := u.userSessionRepo.ListActiveSessions(ctx)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.ListActive", "ListActiveSessions", "failed to list active sessions", err)
-		return nil, fmt.Errorf("list active sessions failed: %w", err)
+		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.ListActive", "active sessions listed successfully",
@@ -129,7 +128,7 @@ func (u *UserSessionService) Update(ctx context.Context, params UpdateUserSessio
 		slog.String("status", params.Status),
 	)
 
-	session, err := u.queries.UpdateUserSession(ctx, db.UpdateUserSessionParams{
+	session, err := u.userSessionRepo.UpdateUserSession(ctx, db.UpdateUserSessionParams{
 		ID:      params.ID,
 		Status:  params.Status,
 		EndedAt: params.EndedAt,
@@ -139,7 +138,7 @@ func (u *UserSessionService) Update(ctx context.Context, params UpdateUserSessio
 			slog.String("session_id", params.ID.String()),
 			slog.String("status", params.Status),
 		)
-		return db.UserSession{}, fmt.Errorf("update user session failed: %w", err)
+		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.Update", "user session updated successfully",
@@ -155,12 +154,12 @@ func (u *UserSessionService) Delete(ctx context.Context, id pgtype.UUID) error {
 		slog.String("session_id", id.String()),
 	)
 
-	err := u.queries.DeleteUserSession(ctx, id)
+	err := u.userSessionRepo.DeleteUserSession(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.Delete", "DeleteUserSession", "failed to delete user session", err,
 			slog.String("session_id", id.String()),
 		)
-		return fmt.Errorf("delete user session failed: %w", err)
+		return InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.Delete", "user session deleted successfully",

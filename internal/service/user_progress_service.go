@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 
 	"test-http/internal/db"
@@ -12,14 +12,14 @@ import (
 )
 
 type UserProgressService struct {
-	queries *db.Queries
-	logger  *slog.Logger
+	userProgressRepo *db.Queries
+	logger           *slog.Logger
 }
 
-func NewUserProgressService(queries *db.Queries, log *slog.Logger) *UserProgressService {
+func NewUserProgressService(userProgresRepo *db.Queries, log *slog.Logger) *UserProgressService {
 	return &UserProgressService{
-		queries: queries,
-		logger:  log,
+		userProgressRepo: userProgresRepo,
+		logger:           log,
 	}
 }
 
@@ -50,7 +50,7 @@ func (u *UserProgressService) Create(ctx context.Context, params CreateUserProgr
 		slog.Int("incorrect_count", int(params.IncorrectCount)),
 	)
 
-	progress, err := u.queries.CreateUserProgress(ctx, db.CreateUserProgressParams{
+	progress, err := u.userProgressRepo.CreateUserProgress(ctx, db.CreateUserProgressParams{
 		UserID:         params.UserID,
 		WordID:         params.WordID,
 		CorrectCount:   params.CorrectCount,
@@ -61,7 +61,7 @@ func (u *UserProgressService) Create(ctx context.Context, params CreateUserProgr
 			slog.String("user_id", params.UserID.String()),
 			slog.String("word_id", params.WordID.String()),
 		)
-		return db.UserProgress{}, fmt.Errorf("create user progress failed: %w", err)
+		return db.UserProgress{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Create", "user progress created successfully",
@@ -76,12 +76,12 @@ func (u *UserProgressService) GetByID(ctx context.Context, id pgtype.UUID) (db.U
 		slog.String("progress_id", id.String()),
 	)
 
-	progress, err := u.queries.GetUserProgress(ctx, id)
+	progress, err := u.userProgressRepo.GetUserProgress(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserProgressService.GetByID", "GetUserProgress", "failed to get user progress by id", err,
 			slog.String("progress_id", id.String()),
 		)
-		return db.UserProgress{}, fmt.Errorf("get user progress by id failed: %w", err)
+		return db.UserProgress{}, InfrastructureUnexpected.Err()
 	}
 
 	return progress, nil
@@ -93,7 +93,7 @@ func (u *UserProgressService) GetByUserAndWord(ctx context.Context, userID, word
 		slog.String("word_id", wordID.String()),
 	)
 
-	progress, err := u.queries.GetUserProgressByUserAndWord(ctx, db.GetUserProgressByUserAndWordParams{
+	progress, err := u.userProgressRepo.GetUserProgressByUserAndWord(ctx, db.GetUserProgressByUserAndWordParams{
 		UserID: userID,
 		WordID: wordID,
 	})
@@ -102,7 +102,7 @@ func (u *UserProgressService) GetByUserAndWord(ctx context.Context, userID, word
 			slog.String("user_id", userID.String()),
 			slog.String("word_id", wordID.String()),
 		)
-		return db.UserProgress{}, fmt.Errorf("get user progress by user and word failed: %w", err)
+		return db.UserProgress{}, InfrastructureUnexpected.Err()
 	}
 
 	return progress, nil
@@ -115,12 +115,12 @@ func (u *UserProgressService) List(ctx context.Context, filters ListUserProgress
 		slog.Int("offset", int(filters.Offset)),
 	)
 
-	progressList, err := u.queries.ListUserProgress(ctx, filters.UserID)
+	progressList, err := u.userProgressRepo.ListUserProgress(ctx, filters.UserID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserProgressService.List", "ListUserProgress", "failed to list user progress", err,
 			slog.String("user_id", filters.UserID.String()),
 		)
-		return nil, fmt.Errorf("list user progress failed: %w", err)
+		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.List", "user progress listed successfully",
@@ -137,7 +137,7 @@ func (u *UserProgressService) Update(ctx context.Context, params UpdateUserProgr
 		slog.Int("incorrect_count", int(params.IncorrectCount)),
 	)
 
-	progress, err := u.queries.UpdateUserProgress(ctx, db.UpdateUserProgressParams{
+	progress, err := u.userProgressRepo.UpdateUserProgress(ctx, db.UpdateUserProgressParams{
 		ID:             params.ID,
 		CorrectCount:   params.CorrectCount,
 		IncorrectCount: params.IncorrectCount,
@@ -146,7 +146,7 @@ func (u *UserProgressService) Update(ctx context.Context, params UpdateUserProgr
 		lib.LogError(ctx, u.logger, "UserProgressService.Update", "UpdateUserProgress", "failed to update user progress", err,
 			slog.String("progress_id", params.ID.String()),
 		)
-		return db.UserProgress{}, fmt.Errorf("update user progress failed: %w", err)
+		return db.UserProgress{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Update", "user progress updated successfully",
@@ -161,12 +161,12 @@ func (u *UserProgressService) Delete(ctx context.Context, id pgtype.UUID) error 
 		slog.String("progress_id", id.String()),
 	)
 
-	err := u.queries.DeleteUserProgress(ctx, id)
+	err := u.userProgressRepo.DeleteUserProgress(ctx, id)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserProgressService.Delete", "DeleteUserProgress", "failed to delete user progress", err,
 			slog.String("progress_id", id.String()),
 		)
-		return fmt.Errorf("delete user progress failed: %w", err)
+		return InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Delete", "user progress deleted successfully",

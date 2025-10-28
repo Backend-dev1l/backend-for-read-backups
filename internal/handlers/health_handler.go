@@ -28,11 +28,11 @@ func NewHealthHandler(pool *pgxpool.Pool, cfg *config.Config, logger *slog.Logge
 }
 
 func (h *HealthHandler) LivezHandler(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Livez handler called (health)")
+	h.logger.Info("Livez handler called")
 	response := HealthResponse{
 		Status: "ok",
 	}
-	h.logger.Info("Livez handler preparing response")
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(response)
