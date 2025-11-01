@@ -11,7 +11,7 @@ CREATE INDEX IF NOT EXISTS idx_user_word_sets_user_id ON user_word_sets(user_id)
 CREATE INDEX IF NOT EXISTS idx_user_word_sets_word_set_id ON user_word_sets(word_set_id);
 
 -- +goose Down
-DROP TABLE IF NOT EXISTS user_word_sets;
+DROP TABLE IF EXISTS user_word_sets;
 DROP INDEX IF EXISTS idx_user_word_sets_user_id ON user_word_sets(user_id);
 DROP INDEX IF EXISTS idx_user_word_sets_word_set_id ON user_word_sets(word_set_id);
 

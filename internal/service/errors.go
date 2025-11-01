@@ -11,5 +11,5 @@ const (
 	PermissionDenied         fault.Code = "PERMISSION_DENIED"
 	Conflict                 fault.Code = "CONFLICT"
 	InfrastructureUnexpected fault.Code = "INFRASTRUCTURE_UNEXPECTED"
-	DecodeFailed             fault.Code = "DECODE_FAILED"
+
 )

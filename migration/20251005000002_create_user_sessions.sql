@@ -12,8 +12,8 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_status ON user_sessions (status) WHERE status = 'active';
 
 -- +goose Down
-DROP TABLE IF NOT EXISTS user_sessions;
-DROP INDEX IF EXISTS idx_user_sessions_user_id_ ON user_sessions (user_id);
-DROP INDEX IF EXISTS idx_user_sessions_status ON user_sessions (status) WHERE status = 'active';
+DROP TABLE IF EXISTS user_sessions;
+DROP INDEX IF EXISTS idx_user_sessions_user_id
+DROP INDEX IF EXISTS idx_user_sessions_status 
 
 

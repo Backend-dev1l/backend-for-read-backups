@@ -20,3 +20,11 @@ func TraceID(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func GetTraceID(ctx context.Context) string {
+	traceID, ok := ctx.Value(logger.TraceIDKey).(string)
+	if !ok {
+		return ""
+	}
+	return traceID
+}

@@ -83,20 +83,7 @@ func (u *UserStatisticsService) GetByID(ctx context.Context, userID pgtype.UUID)
 
 func (u *UserStatisticsService) List(ctx context.Context, filters UpdateUserStatisticsParams) ([]db.UserStatistic, error) {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.List", "list operation not implemented for user statistics")
-
-	statistics, err := u.userStatistRepo.ListActiveSessions(ctx)
-	if err != nil {
-		lib.LogError(ctx, u.logger, "UserStatisticsService.List", "failed to list user statistics", err,
-	   slog.String("user_id", filters.UserID.String())),
-		 return nil, InfrastructureUnexpected.Err()
-	}
-
-	lib.LogInfo(ctx, u.logger, "UserStatisticsService.List", "successfully listed users",
-    slog.String("user_id", filters.UserID.String()),
-	  slog.Int("total_words_learned", int(params.TotalWordsLearned))
-	  slog.Int("total_time", int(params.TotalTime))),
-
-	return statistics, nil
+  return nil, nil
 }
 
 func (u *UserStatisticsService) Update(ctx context.Context, params UpdateUserStatisticsParams) (db.UserStatistic, error) {

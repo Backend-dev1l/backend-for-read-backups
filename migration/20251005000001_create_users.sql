@@ -12,8 +12,8 @@ CREATE TABLE users (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users  (email);
 
 -- +goose Down
-DROP TABLE IF NOT EXISTS users;
-DROP INDEX IF EXISTS idx_users_email ON users  (email);
+DROP TABLE IF EXISTS users;
+DROP INDEX IF EXISTS idx_users_email
 
 
 

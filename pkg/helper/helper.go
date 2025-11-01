@@ -1,56 +1,56 @@
 package helper
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
-	"test-http/errors_pkg"
+	errorsPkg "test-http/pkg/errors_pkg"
+	"test-http/pkg/fault"
 )
 
-// HTTPError преобразует ошибку в соответствующий HTTP ответ
-func HTTPError(ctx context.Context, w http.ResponseWriter, err error) {
-	lang, _ := ctx.Value(localeKey{}).(string)
+// HTTPError преобразует ошибку в корректный HTTP-ответ.
+func HTTPError(w http.ResponseWriter, err error) {
 	var f *fault.Fault
 
+	// Если это наша бизнес-ошибка
 	if errors.As(err, &f) {
-		writeFaultResponse(w, f.ToProto(lang))
+		writeFaultResponse(w, f)
 		return
 	}
 
-	// fallback ошибка
+	// Иначе возвращаем стандартную системную ошибку
 	fallbackFault := errorsPkg.InfrastructureUnexpected.Err()
-	writeFaultResponse(w, fallbackFault.ToProto(lang))
+	writeFaultResponse(w, fallbackFault)
 }
 
-// writeFaultResponse записывает ответ на основе fault
-func writeFaultResponse(w http.ResponseWriter, faultProto *fault.Proto) {
-	statusCode := faultToHTTPStatus(faultProto)
+// writeFaultResponse формирует JSON-ответ на основе fault.Fault.
+func writeFaultResponse(w http.ResponseWriter, f *fault.Fault) {
+	statusCode := faultToHTTPStatus(f)
 
 	response := map[string]interface{}{
 		"error": map[string]interface{}{
-			"code":    faultProto.Code,
-			"message": faultProto.Message,
-			"details": faultProto.Details,
+			"code":    f.Code,
+			"message": f.Message,
+			"args":    f.Args,
 		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
-// faultToHTTPStatus преобразует код ошибки в HTTP статус
-func faultToHTTPStatus(faultProto *fault.Proto) int {
-	switch faultProto.Code {
-	case string(errors_pkg.ContextUserIDMissing):
+// faultToHTTPStatus определяет HTTP-статус на основе кода ошибки.
+func faultToHTTPStatus(f *fault.Fault) int {
+	switch f.Code {
+	case string(errorsPkg.ContextGettingUserMissing):
 		return http.StatusUnauthorized
-	case string(errors_pkg.ValidationFailed):
+	case string(errorsPkg.ValidationError):
 		return http.StatusBadRequest
-	case string(errors_pkg.JSONDecodeFailed):
+	case string(errorsPkg.DecodeFailed):
 		return http.StatusBadRequest
-	case string(errors_pkg.InfrastructureUnexpected):
+	case string(errorsPkg.InfrastructureUnexpected):
 		return http.StatusInternalServerError
 	default:
 		return http.StatusInternalServerError
