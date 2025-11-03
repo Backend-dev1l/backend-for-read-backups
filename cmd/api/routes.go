@@ -2,43 +2,34 @@ package api
 
 import (
 	"log/slog"
-	"test-http/internal/config"
-	"test-http/internal/handlers"
+	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"test-http/internal/config"
+	"test-http/internal/db"
+	"test-http/internal/handlers"
+	"test-http/internal/middleware"
+	"test-http/internal/service"
 )
 
-func RegisterRoutes(r chi.Router, pool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) {
-	statisticsHandler := handlers.NewStatisticsHandler(pool, cfg, logger)
-	healthHandler := handlers.NewHealthHandler(pool, cfg, logger)
+func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) {
+	userRepo := db.New(dbPool)
+	userService := service.NewUserService(userRepo, logger)
+	userHandler := handlers.NewUserHandler(logger, userService)
 
-	r.Route("/api/v1", func(g chi.Router) {
-		g.Get("/livez", healthHandler.LivezHandler)
-		g.Get("/readyz", statisticsHandler.ReadyzHandler)
+	r.Use(middleware.TraceID)
+	r.Use(middleware.Recover(logger))
+	r.Use(middleware.RequestLogger(logger))
+
+	r.Route("/api/v1", func(r chi.Router) {
+		// --- Users ---
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.CreateUser(w, r) })
+			r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.GetUser(w, r) })
+			// r.Put("/{id}", ...) // Здесь добавить UpdateUser если появится
+			// r.Delete("/{id}", ...) // Здесь добавить DeleteUser если появится
+		})
 	})
 }
-
-
-	s.logger.Info("Readyz handler called")
-	ctx, cancel := context.WithTimeout(r.Context(), s.cfg.TimeOuts.PerRequestTimeout)
-	defer cancel()
-
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := s.pool.Ping(ctx); err != nil {
-		response := ReadyzResponse{
-			Status: "error",
-		}
-		w.WriteHeader(http.StatusServiceUnavailable)
-		_ = json.NewEncoder(w).Encode(response)
-		s.logger.Error("Failed to ping database", "error", err)
-		return
-	}
-
-	response := ReadyzResponse{
-		Status: "ok",
-	}
-	s.logger.Info("Database ping successful")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(response)

@@ -9,11 +9,11 @@ import (
 	"syscall"
 	routes "test-http/cmd/api"
 	"test-http/internal/config"
-	"test-http/internal/middleware"
+
 	pool "test-http/pkg/db"
 	"test-http/pkg/logger"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -42,10 +42,6 @@ func main() {
 	defer dbPool.Close()
 
 	r := chi.NewRouter()
-
-	r.Use(middleware.TraceID)
-	r.Use(middleware.Recover(log))
-	r.Use(middleware.RequestLogger(log))
 
 	routes.RegisterRoutes(r, dbPool, cfg, log)
 

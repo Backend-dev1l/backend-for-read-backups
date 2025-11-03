@@ -13,21 +13,21 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type ReadyzHandler struct {
+type ReadyHandler struct {
 	pool   *pgxpool.Pool
 	cfg    *config.Config
 	logger *slog.Logger
 }
 
-func NewReadyzHandler(pool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) *ReadyzHandler {
-	return &ReadyzHandler{
+func NewReadyHandler(pool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) *ReadyHandler {
+	return &ReadyHandler{
 		pool:   pool,
 		cfg:    cfg,
 		logger: logger,
 	}
 }
 
-func (s *ReadyzHandler) ReadyzHandler(w http.ResponseWriter, r *http.Request) error {
+func (s *ReadyHandler) ReadyzHandler(w http.ResponseWriter, r *http.Request) error {
 	s.logger.Info("Readyz handler called")
 
 	ctx, cancel := context.WithTimeout(r.Context(), s.cfg.TimeOuts.PerRequestTimeout)

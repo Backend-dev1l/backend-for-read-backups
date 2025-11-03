@@ -119,3 +119,70 @@ func (u *UserHandler) UserEmail(w http.ResponseWriter, r *http.Request) error {
 	render.JSON(w, r, user)
 	return nil
 }
+
+func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	traceID := middleware.GetTraceID(ctx)
+
+	log := u.log.With(slog.String("trace_id", traceID))
+	log.Info("DeleteUser handler started")
+
+	userID := r.URL.Query().Get("id")
+	if userID == "" {
+		log.Error("missing user id in query parameters")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	parsedUUID, err := uuid.FromString(userID)
+	if err != nil {
+		log.Error("invalid user id format:", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	userUUID := pgtype.UUID{
+		Bytes: parsedUUID,
+		Valid: true,
+	}
+
+	if err := u.service.Delete(ctx, userUUID); err != nil {
+		log.Error("UserService.Delete failed:", err)
+		return helper.HTTPError(w, errorsPkg.ContextDeletingUserMissing.Err())
+	}
+
+	render.Status(r, http.StatusOK)
+	return nil
+}
+
+func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	traceID := middleware.GetTraceID(ctx)
+
+	log := u.log.With(slog.String("trace_id", traceID))
+	log.Info("UpdateUser handler started")
+
+	var req db.User
+	if err := render.DecodeJSON(r.Body, &req); err != nil {
+		log.Error("DecodeJSON failed:", err)
+		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
+	}
+
+	if err := u.validate.Struct(req); err != nil {
+		log.Error("validation failed:", err)
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	user, err := u.service.Update(ctx, service.UpdateUserParams{
+		ID:       req.ID,
+		Username: req.Username,
+		Email:    req.Email,
+	})
+	if err != nil {
+		log.Error("UserService.Update failed:", err)
+		return helper.HTTPError(w, errorsPkg.ContextUpdatingUserMissing.Err())
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, user)
+
+	return nil
+}
