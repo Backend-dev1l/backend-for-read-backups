@@ -5,7 +5,8 @@ WHERE id = $1 LIMIT 1;
 -- name: ListUserWordSets :many
 SELECT * FROM user_word_sets
 WHERE user_id = $1
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3; 
 
 -- name: CreateUserWordSet :one
 INSERT INTO user_word_sets (

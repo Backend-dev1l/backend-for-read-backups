@@ -9,7 +9,8 @@ WHERE user_id = $1 AND word_id = $2 LIMIT 1;
 -- name: ListUserProgress :many
 SELECT * FROM user_progress
 WHERE user_id = $1
-ORDER BY last_attempt DESC;
+ORDER BY last_attempt DESC
+LIMIT $2 OFFSET $3;
 
 -- name: CreateUserProgress :one
 INSERT INTO user_progress (

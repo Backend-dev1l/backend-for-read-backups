@@ -129,7 +129,7 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 	log := u.log.With(slog.String("trace_id", traceID))
 	log.Info("DeleteUser handler started")
 
-	userID := r.URL.Query().Get("id")
+	userID := chi.URLParam(r, "id")
 	if userID == "" {
 		log.Error("missing user id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
