@@ -39,12 +39,12 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 	var req db.UserStatistic
 
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
-		log.Error("DecodeJSON failed:", err)
+		log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := s.validate.Struct(req); err != nil {
-		log.Error("validation failed:", err)
+		log.Error("validation failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
@@ -55,7 +55,7 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 		TotalTime:         req.TotalTime,
 	})
 	if err != nil {
-		log.Error("UserStatisticsService.Create failed:", err)
+		log.Error("UserStatisticsService.Create failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextCreatingUserStatisticsMissing.Err())
 	}
 

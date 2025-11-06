@@ -13,11 +13,11 @@ import (
 )
 
 type UserWordSetService struct {
-	userWordRepo *db.Queries
+	userWordRepo db.UserWordSetRepo
 	logger       *slog.Logger
 }
 
-func NewUserWordSetService(userWordRepo *db.Queries, log *slog.Logger) *UserWordSetService {
+func NewUserWordSetService(userWordRepo db.UserWordSetRepo, log *slog.Logger) *UserWordSetService {
 	return &UserWordSetService{
 		userWordRepo: userWordRepo,
 		logger:       log,

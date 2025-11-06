@@ -12,13 +12,13 @@ import (
 )
 
 type UserProgressService struct {
-	userProgressRepo *db.Queries
+	userProgressRepo db.UserProgressRepo
 	logger           *slog.Logger
 }
 
-func NewUserProgressService(userProgresRepo *db.Queries, log *slog.Logger) *UserProgressService {
+func NewUserProgressService(userProgressRepo db.UserProgressRepo, log *slog.Logger) *UserProgressService {
 	return &UserProgressService{
-		userProgressRepo: userProgresRepo,
+		userProgressRepo: userProgressRepo,
 		logger:           log,
 	}
 }

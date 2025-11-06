@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	errorsPkg "test-http/pkg/errors_pkg"
 	"test-http/pkg/fault"
 )
 
@@ -17,12 +16,12 @@ func HTTPError(w http.ResponseWriter, err error) error {
 		return nil
 	}
 
-	fallbackFault := errorsPkg.InfrastructureUnexpected.Err()
+	// Use a generic unhandled fault as a fallback.
+	fallbackFault := fault.UnhandledError.Err()
 	writeFaultResponse(w, fallbackFault)
 	return nil
 }
 
-// writeFaultResponse формирует JSON-ответ на основе fault.Fault.
 func writeFaultResponse(w http.ResponseWriter, f *fault.Fault) {
 
 	response := map[string]interface{}{

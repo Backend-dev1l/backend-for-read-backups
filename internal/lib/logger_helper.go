@@ -29,10 +29,14 @@ func LogInfo(ctx context.Context, log *slog.Logger, operation, message string, a
 
 func LogError(ctx context.Context, log *slog.Logger, operation, query, message string, err error, attrs ...any) {
 	traceID := getTraceID(ctx)
+	errMsg := ""
+	if err != nil {
+		errMsg = err.Error()
+	}
 	logAttrs := []any{
 		slog.String("operation", operation),
 		slog.String("query", query),
-		slog.String("error", err.Error()),
+		slog.String("error", errMsg),
 		slog.String("trace_id", traceID),
 	}
 	logAttrs = append(logAttrs, attrs...)

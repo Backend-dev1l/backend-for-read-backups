@@ -12,11 +12,11 @@ import (
 )
 
 type UserSessionService struct {
-	userSessionRepo *db.Queries
+	userSessionRepo db.UserSessionRepo
 	logger          *slog.Logger
 }
 
-func NewUserSessionService(userSessionRepo *db.Queries, log *slog.Logger) *UserSessionService {
+func NewUserSessionService(userSessionRepo db.UserSessionRepo, log *slog.Logger) *UserSessionService {
 	return &UserSessionService{
 		userSessionRepo: userSessionRepo,
 		logger:          log,

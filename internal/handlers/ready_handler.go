@@ -8,6 +8,7 @@ import (
 	"test-http/pkg/helper"
 
 	errorsPkg "test-http/pkg/errors_pkg"
+	"test-http/pkg/fault"
 
 	"github.com/go-chi/render"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,13 +35,13 @@ func (s *ReadyHandler) ReadyzHandler(w http.ResponseWriter, r *http.Request) err
 	defer cancel()
 
 	if err := render.DecodeJSON(r.Body, &struct{}{}); err != nil {
-		s.logger.Error("DecodeJSON failed:", err)
+		s.logger.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := s.pool.Ping(ctx); err != nil {
-		s.logger.Error("Database ping failed:", err)
-		return helper.HTTPError(w, errorsPkg.InfrastructureUnexpected.Err())
+		s.logger.Error("Database ping failed", "err", err)
+		return helper.HTTPError(w, fault.UnhandledError.Err())
 
 	}
 	render.Status(r, http.StatusOK)

@@ -9,8 +9,10 @@ import (
 
 	"test-http/internal/service"
 	errorsPkg "test-http/pkg/errors_pkg"
+	"test-http/pkg/fault"
 	"test-http/pkg/helper"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	pgtype "github.com/jackc/pgx/v5/pgtype"
@@ -36,12 +38,12 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 
 	var req db.User
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
-		u.log.Error("DecodeJSON failed:", err)
+		u.log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := u.validate.Struct(req); err != nil {
-		log.Error("validation failed:", err)
+		log.Error("validation failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
@@ -50,7 +52,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 		Email:    req.Email,
 	})
 	if err != nil {
-		log.Error("UserService.Create failed:", err)
+		log.Error("UserService.Create failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextCreatingUserMissing.Err())
 	}
 
@@ -66,7 +68,7 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	log.Info("GetUser handler started")
 
-	userID := r.URL.Query().Get("id")
+	userID := chi.URLParam(r, "id")
 	if userID == "" {
 		log.Error("missing user id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
@@ -74,7 +76,7 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	parsedUUID, err := uuid.FromString(userID)
 	if err != nil {
-		log.Error("invalid user id format:", err)
+		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
@@ -85,7 +87,7 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	user, err := u.service.GetByID(ctx, userUUID)
 	if err != nil {
-		log.Error("UserService.GetByID failed:", err)
+		log.Error("UserService.GetByID failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
 	}
 
@@ -103,16 +105,16 @@ func (u *UserHandler) UserEmail(w http.ResponseWriter, r *http.Request) error {
 
 	log.Info("User Email handler started")
 
-	userEmail := r.URL.Query().Get("email")
-	if userEmail != "" {
+	userEmail := chi.URLParam(r, "email")
+	if userEmail == "" {
 		log.Error("missing email in query parameters")
-		return helper.HTTPError(w, errorsPkg.GettingEmailError.Err())
+		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	user, err := u.service.GetByEmail(ctx, userEmail)
 	if err != nil {
-		log.Error("UserService.GetByEmail failed:", err)
-		return helper.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
+		log.Error("UserService.GetByEmail failed", "err", err)
+		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -135,7 +137,7 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 
 	parsedUUID, err := uuid.FromString(userID)
 	if err != nil {
-		log.Error("invalid user id format:", err)
+		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
@@ -145,8 +147,8 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := u.service.Delete(ctx, userUUID); err != nil {
-		log.Error("UserService.Delete failed:", err)
-		return helper.HTTPError(w, errorsPkg.ContextDeletingUserMissing.Err())
+		log.Error("UserService.Delete failed", "err", err)
+		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -162,12 +164,12 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 
 	var req db.User
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
-		log.Error("DecodeJSON failed:", err)
+		log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := u.validate.Struct(req); err != nil {
-		log.Error("validation failed:", err)
+		log.Error("validation failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
@@ -177,8 +179,8 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 		Email:    req.Email,
 	})
 	if err != nil {
-		log.Error("UserService.Update failed:", err)
-		return helper.HTTPError(w, errorsPkg.ContextUpdatingUserMissing.Err())
+		log.Error("UserService.Update failed", "err", err)
+		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)

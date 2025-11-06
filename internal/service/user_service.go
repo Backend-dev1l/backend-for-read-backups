@@ -13,11 +13,11 @@ import (
 )
 
 type UserService struct {
-	userRepo *db.Queries
+	userRepo db.UserRepo
 	logger   *slog.Logger
 }
 
-func NewUserService(userRepo *db.Queries, log *slog.Logger) *UserService {
+func NewUserService(userRepo db.UserRepo, log *slog.Logger) *UserService {
 	return &UserService{
 		userRepo: userRepo,
 		logger:   log,

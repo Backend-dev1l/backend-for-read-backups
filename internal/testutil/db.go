@@ -47,9 +47,6 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	database := "testdb"
 	uri := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port.Port(), database)
 
-	// t.Logf("🚀 DSN for goose: %s", uri)
-	// --> НЕ ВЫЗЫВАЕМ больше runMigrations!
-
 	pool, err := pgxpool.New(ctx, uri)
 	if err != nil {
 		_ = container.Terminate(ctx)
