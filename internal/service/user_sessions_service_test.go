@@ -104,7 +104,7 @@ func TestUserSessionService_List_Success(t *testing.T) {
 
 	var uid pgtype.UUID
 	users := []db.UserSession{{UserID: uid}, {UserID: uid}}
-	mockRepo.EXPECT().ListUserSessions(gomock.Any(), uid).Return(users, nil)
+	mockRepo.EXPECT().ListUserSessions(gomock.Any(), db.ListUserSessionsParams{UserID: uid, Limit: 10, Offset: 0}).Return(users, nil)
 
 	got, err := svc.List(context.Background(), ListUserSessionsFilters{UserID: uid, Limit: 10, Offset: 0})
 	if err != nil {
@@ -124,7 +124,7 @@ func TestUserSessionService_List_RepoError(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var uid pgtype.UUID
-	mockRepo.EXPECT().ListUserSessions(gomock.Any(), uid).Return(nil, errors.New("db error"))
+	mockRepo.EXPECT().ListUserSessions(gomock.Any(), db.ListUserSessionsParams{UserID: uid, Limit: 1, Offset: 0}).Return(nil, errors.New("db error"))
 
 	_, err := svc.List(context.Background(), ListUserSessionsFilters{UserID: uid, Limit: 1, Offset: 0})
 	if err == nil {
@@ -141,7 +141,7 @@ func TestUserSessionService_ListActive_Success(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	sessions := []db.UserSession{{Status: "active"}}
-	mockRepo.EXPECT().ListActiveSessions(gomock.Any()).Return(sessions, nil)
+	mockRepo.EXPECT().ListActiveSessions(gomock.Any(), gomock.Any()).Return(sessions, nil)
 
 	got, err := svc.ListActive(context.Background())
 	if err != nil {
@@ -160,7 +160,7 @@ func TestUserSessionService_ListActive_RepoError(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserSessionService(mockRepo, logger)
 
-	mockRepo.EXPECT().ListActiveSessions(gomock.Any()).Return(nil, errors.New("db error"))
+	mockRepo.EXPECT().ListActiveSessions(gomock.Any(), gomock.Any()).Return(nil, errors.New("db error"))
 
 	_, err := svc.ListActive(context.Background())
 	if err == nil {

@@ -90,7 +90,11 @@ func (u *UserSessionService) List(ctx context.Context, filters ListUserSessionsF
 		slog.Int("offset", int(filters.Offset)),
 	)
 
-	sessions, err := u.userSessionRepo.ListUserSessions(ctx, filters.UserID)
+	sessions, err := u.userSessionRepo.ListUserSessions(ctx, db.ListUserSessionsParams{
+		UserID: filters.UserID,
+		Limit:  filters.Limit,
+		Offset: filters.Offset,
+	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.List", "ListUserSessions", "failed to list user sessions", err,
 			slog.String("user_id", filters.UserID.String()),
@@ -109,7 +113,10 @@ func (u *UserSessionService) List(ctx context.Context, filters ListUserSessionsF
 func (u *UserSessionService) ListActive(ctx context.Context) ([]db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionService.ListActive", "listing active sessions")
 
-	sessions, err := u.userSessionRepo.ListActiveSessions(ctx)
+	sessions, err := u.userSessionRepo.ListActiveSessions(ctx, db.ListActiveSessionsParams{
+		Limit:  100,
+		Offset: 0,
+	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.ListActive", "ListActiveSessions", "failed to list active sessions", err)
 		return nil, InfrastructureUnexpected.Err()

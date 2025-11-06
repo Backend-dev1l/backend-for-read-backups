@@ -12,7 +12,8 @@ type UserRepo interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetUser(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
-	ListUsers(ctx context.Context) ([]User, error)
+	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	CountUsers(ctx context.Context) (int64, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 }
@@ -21,8 +22,8 @@ type UserRepo interface {
 type UserSessionRepo interface {
 	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error)
 	GetUserSession(ctx context.Context, id pgtype.UUID) (UserSession, error)
-	ListActiveSessions(ctx context.Context) ([]UserSession, error)
-	ListUserSessions(ctx context.Context, userID pgtype.UUID) ([]UserSession, error)
+	ListActiveSessions(ctx context.Context, arg ListActiveSessionsParams) ([]UserSession, error)
+	ListUserSessions(ctx context.Context, arg ListUserSessionsParams) ([]UserSession, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (UserSession, error)
 	DeleteUserSession(ctx context.Context, id pgtype.UUID) error
 }
@@ -40,9 +41,9 @@ type UserProgressRepo interface {
 // UserStatisticsRepo defines methods from Queries used by statistics service.
 type UserStatisticsRepo interface {
 	CreateUserStatistics(ctx context.Context, arg CreateUserStatisticsParams) (UserStatistic, error)
-	GetUserStatistics(ctx context.Context, id pgtype.UUID) (UserStatistic, error)
+	GetUserStatistics(ctx context.Context, userID pgtype.UUID) (UserStatistic, error)
 	UpdateUserStatistics(ctx context.Context, arg UpdateUserStatisticsParams) (UserStatistic, error)
-	DeleteUserStatistics(ctx context.Context, id pgtype.UUID) error
+	DeleteUserStatistics(ctx context.Context, userID pgtype.UUID) error
 }
 
 // UserWordSetRepo defines methods from Queries used by user word set service.

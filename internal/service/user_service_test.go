@@ -76,7 +76,7 @@ func TestUserService_List_Success(t *testing.T) {
 	svc := NewUserService(mockRepo, logger)
 
 	users := []db.User{{Username: "a"}, {Username: "b"}}
-	mockRepo.EXPECT().ListUsers(gomock.Any()).Return(users, nil)
+	mockRepo.EXPECT().ListUsers(gomock.Any(), db.ListUsersParams{Limit: 10, Offset: 0}).Return(users, nil)
 
 	got, err := svc.List(context.Background(), ListUsersFilters{Limit: 10, Offset: 0})
 	if err != nil {

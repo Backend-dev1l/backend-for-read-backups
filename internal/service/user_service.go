@@ -110,7 +110,10 @@ func (u *UserService) List(ctx context.Context, filters ListUsersFilters) ([]db.
 		slog.Int("offset", int(filters.Offset)),
 	)
 
-	users, err := u.userRepo.ListUsers(ctx)
+	users, err := u.userRepo.ListUsers(ctx, db.ListUsersParams{
+		Limit:  filters.Limit,
+		Offset: filters.Offset,
+	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.List", "ListUsers", "failed to list users", err,
 			slog.Int("limit", int(filters.Limit)),

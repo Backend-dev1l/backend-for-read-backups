@@ -12,11 +12,11 @@ import (
 )
 
 type UserStatisticsService struct {
-	userStatistRepo *db.Queries
+	userStatistRepo db.UserStatisticsRepo
 	logger          *slog.Logger
 }
 
-func NewUserStatisticsService(userStatistRepo *db.Queries, log *slog.Logger) *UserStatisticsService {
+func NewUserStatisticsService(userStatistRepo db.UserStatisticsRepo, log *slog.Logger) *UserStatisticsService {
 	return &UserStatisticsService{
 		userStatistRepo: userStatistRepo,
 		logger:          log,
