@@ -70,10 +70,16 @@ const listActiveSessions = `-- name: ListActiveSessions :many
 SELECT id, user_id, started_at, ended_at, status FROM user_sessions
 WHERE status = 'active'
 ORDER BY started_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListActiveSessions(ctx context.Context) ([]UserSession, error) {
-	rows, err := q.db.Query(ctx, listActiveSessions)
+type ListActiveSessionsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListActiveSessions(ctx context.Context, arg ListActiveSessionsParams) ([]UserSession, error) {
+	rows, err := q.db.Query(ctx, listActiveSessions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -99,13 +105,20 @@ func (q *Queries) ListActiveSessions(ctx context.Context) ([]UserSession, error)
 }
 
 const listUserSessions = `-- name: ListUserSessions :many
-SELECT id, user_id, started_at, ended_at, status FROM user_sessions
+SELECT id, user_id, started_at, ended_at, status FROM user_sessions  
 WHERE user_id = $1
 ORDER BY started_at DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListUserSessions(ctx context.Context, userID pgtype.UUID) ([]UserSession, error) {
-	rows, err := q.db.Query(ctx, listUserSessions, userID)
+type ListUserSessionsParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+func (q *Queries) ListUserSessions(ctx context.Context, arg ListUserSessionsParams) ([]UserSession, error) {
+	rows, err := q.db.Query(ctx, listUserSessions, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

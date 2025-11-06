@@ -3,14 +3,16 @@ SELECT * FROM user_sessions
 WHERE id = $1 LIMIT 1;
 
 -- name: ListUserSessions :many
-SELECT * FROM user_sessions
+SELECT * FROM user_sessions  
 WHERE user_id = $1
-ORDER BY started_at DESC;
+ORDER BY started_at DESC
+LIMIT $2 OFFSET $3;
 
 -- name: ListActiveSessions :many
 SELECT * FROM user_sessions
 WHERE status = 'active'
-ORDER BY started_at DESC;
+ORDER BY started_at DESC
+LIMIT $1 OFFSET $2;
 
 -- name: CreateUserSession :one
 INSERT INTO user_sessions (
