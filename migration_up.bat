@@ -1,1 +1,2 @@
-goose postgres "postgres://app_user:my-password@localhost:5432/testdb?sslmode=disable&search_path=public" -dir migration up 
+goose postgres postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable -dir migration up
+

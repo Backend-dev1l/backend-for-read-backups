@@ -28,8 +28,9 @@ func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logg
 		r.Route("/users", func(r chi.Router) {
 			r.Post("/", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.CreateUser(w, r) })
 			r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.GetUser(w, r) })
-			// r.Put("/{id}", ...) // Здесь добавить UpdateUser если появится
-			// r.Delete("/{id}", ...) // Здесь добавить DeleteUser если появится
+			r.Get("/email/{email}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.UserEmail(w, r) })
+			r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.UpdateUser(w, r) })
+			r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.DeleteUser(w, r) })
 		})
 	})
 }
