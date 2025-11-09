@@ -7,7 +7,6 @@ import (
 	"test-http/internal/config"
 	"test-http/pkg/helper"
 
-	errorsPkg "test-http/pkg/errors_pkg"
 	"test-http/pkg/fault"
 
 	"github.com/go-chi/render"
@@ -34,16 +33,12 @@ func (s *ReadyHandler) ReadyzHandler(w http.ResponseWriter, r *http.Request) err
 	ctx, cancel := context.WithTimeout(r.Context(), s.cfg.TimeOuts.PerRequestTimeout)
 	defer cancel()
 
-	if err := render.DecodeJSON(r.Body, &struct{}{}); err != nil {
-		s.logger.Error("DecodeJSON failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
-	}
-
 	if err := s.pool.Ping(ctx); err != nil {
 		s.logger.Error("Database ping failed", "err", err)
 		return helper.HTTPError(w, fault.UnhandledError.Err())
 
 	}
 	render.Status(r, http.StatusOK)
+
 	return nil
 }

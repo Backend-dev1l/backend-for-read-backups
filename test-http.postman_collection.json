@@ -1,0 +1,188 @@
+{
+	"info": {
+		"_postman_id": "test-http-api-collection",
+		"name": "Test HTTP API",
+		"description": "API коллекция для test-http сервиса",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users"]
+						},
+						"description": "Создание нового пользователя"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "00000000-0000-0000-0000-000000000000",
+									"description": "UUID пользователя"
+								}
+							]
+						},
+						"description": "Получение пользователя по ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/email/:email",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "email", ":email"],
+							"variable": [
+								{
+									"key": "email",
+									"value": "john@example.com",
+									"description": "Email пользователя"
+								}
+							]
+						},
+						"description": "Получение пользователя по email"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": {\n    \"bytes\": \"00000000-0000-0000-0000-000000000000\",\n    \"valid\": true\n  },\n  \"username\": \"john_updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "00000000-0000-0000-0000-000000000000",
+									"description": "UUID пользователя"
+								}
+							]
+						},
+						"description": "Обновление данных пользователя"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "00000000-0000-0000-0000-000000000000",
+									"description": "UUID пользователя"
+								}
+							]
+						},
+						"description": "Удаление пользователя"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для работы с пользователями"
+		},
+		{
+			"name": "Statistics",
+			"item": [
+				{
+					"name": "Create User Statistics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"total_words_learned\": 100,\n  \"accuracy\": 95.5,\n  \"total_time\": 3600\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/statistics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "statistics"]
+						},
+						"description": "Создание статистики пользователя"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для работы со статистикой пользователей"
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Readyz",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/readyz",
+							"host": ["{{base_url}}"],
+							"path": ["readyz"]
+						},
+						"description": "Проверка готовности сервиса (включая подключение к БД)"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для проверки состояния сервиса"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8080",
+			"type": "string"
+		}
+	]
+}

@@ -19,6 +19,11 @@ func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logg
 	userService := service.NewUserService(userRepo, logger)
 	userHandler := handlers.NewUserHandler(logger, userService)
 
+	userStatisticsService := service.NewUserStatisticsService(userRepo, logger)
+	statisticsHandler := handlers.NewStatisticsHandler(userStatisticsService, nil, logger)
+
+	readyHandler := handlers.NewReadyHandler(dbPool, cfg, logger)
+
 	r.Use(middleware.TraceID)
 	r.Use(middleware.Recover(logger))
 	r.Use(middleware.RequestLogger(logger))
@@ -32,5 +37,13 @@ func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logg
 			r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.UpdateUser(w, r) })
 			r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) { _ = userHandler.DeleteUser(w, r) })
 		})
+
+		// --- Statistics ---
+		r.Route("/statistics", func(r chi.Router) {
+			r.Post("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.CreateStatistics(w, r) })
+		})
 	})
+
+	// --- Health Check ---
+	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) { _ = readyHandler.ReadyzHandler(w, r) })
 }

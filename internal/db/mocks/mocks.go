@@ -10,7 +10,7 @@ import (
 	"test-http/internal/db"
 
 	"github.com/golang/mock/gomock"
-	pgtype "github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // MockUserRepo is a mock of UserRepo interface.
