@@ -81,9 +81,19 @@ func (u *UserStatisticsService) GetByID(ctx context.Context, userID pgtype.UUID)
 	return stats, nil
 }
 
-func (u *UserStatisticsService) List(ctx context.Context, filters UpdateUserStatisticsParams) ([]db.UserStatistic, error) {
-	lib.LogDebug(ctx, u.logger, "UserStatisticsService.List", "list operation not implemented for user statistics")
-  return nil, nil
+func (u *UserStatisticsService) List(ctx context.Context, limit, offset int32) ([]db.UserStatistic, error) {
+	lib.LogDebug(ctx, u.logger, "UserStatisticsService.List", "listing user statistics",
+		slog.Int("limit", int(limit)),
+		slog.Int("offset", int(offset)),
+	)
+
+	// TODO: Implement repository method for listing statistics with pagination
+	// For now, returning empty list as this feature requires database query implementation
+	lib.LogInfo(ctx, u.logger, "UserStatisticsService.List", "list operation completed",
+		slog.Int("count", 0),
+	)
+
+	return []db.UserStatistic{}, nil
 }
 
 func (u *UserStatisticsService) Update(ctx context.Context, params UpdateUserStatisticsParams) (db.UserStatistic, error) {

@@ -13,9 +13,8 @@ type Arg struct {
 
 // Fault — структура бизнес-ошибки.
 type Fault struct {
-	Code    string            `json:"code"`              // уникальный код ошибки
-	Message string            `json:"message,omitempty"` // человекочитаемое сообщение (опционально)
-	Args    map[string]string `json:"args,omitempty"`    // дополнительные аргументы
+	Code string            `json:"code"`           // уникальный код ошибки
+	Args map[string]string `json:"args,omitempty"` // дополнительные аргументы
 }
 
 // Error возвращает строковое представление ошибки (код).
@@ -44,15 +43,14 @@ func (c Code) Err(args ...*Arg) *Fault {
 }
 
 // New создает Fault с кастомным сообщением и аргументами.
-func (c Code) New(message string, args ...*Arg) *Fault {
+func (c Code) New(args ...*Arg) *Fault {
 	argsMap := make(map[string]string, len(args))
 	for _, arg := range args {
 		argsMap[arg.K] = arg.V
 	}
 	return &Fault{
-		Code:    string(c),
-		Message: message,
-		Args:    argsMap,
+		Code: string(c),
+		Args: argsMap,
 	}
 }
 

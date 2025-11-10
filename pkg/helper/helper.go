@@ -26,9 +26,8 @@ func writeFaultResponse(w http.ResponseWriter, f *fault.Fault) {
 
 	response := map[string]interface{}{
 		"error": map[string]interface{}{
-			"code":    f.Code,
-			"message": f.Message,
-			"args":    f.Args,
+			"code": f.Code,
+			"args": f.Args,
 		},
 	}
 

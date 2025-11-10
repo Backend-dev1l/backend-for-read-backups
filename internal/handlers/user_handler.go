@@ -4,9 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"test-http/internal/db"
+	"test-http/internal/dto"
 	"test-http/internal/middleware"
-
 	"test-http/internal/service"
 	errorsPkg "test-http/pkg/errors_pkg"
 	"test-http/pkg/fault"
@@ -15,8 +14,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
-	pgtype "github.com/jackc/pgx/v5/pgtype"
-	uuid "github.com/satori/go.uuid"
 )
 
 type UserHandler struct {
@@ -36,7 +33,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 
 	log.Info("CreateUser handler started")
 
-	var req db.User
+	var req dto.CreateUserRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		u.log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
@@ -74,15 +71,10 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	parsedUUID, err := uuid.FromString(userID)
+	userUUID, err := dto.ParseUUID(userID)
 	if err != nil {
 		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	userUUID := pgtype.UUID{
-		Bytes: parsedUUID,
-		Valid: true,
 	}
 
 	user, err := u.service.GetByID(ctx, userUUID)
@@ -135,15 +127,10 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	parsedUUID, err := uuid.FromString(userID)
+	userUUID, err := dto.ParseUUID(userID)
 	if err != nil {
 		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	userUUID := pgtype.UUID{
-		Bytes: parsedUUID,
-		Valid: true,
 	}
 
 	if err := u.service.Delete(ctx, userUUID); err != nil {
@@ -162,7 +149,7 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 	log := u.log.With(slog.String("trace_id", traceID))
 	log.Info("UpdateUser handler started")
 
-	var req db.User
+	var req dto.UpdateUserRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
@@ -173,8 +160,14 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
+	userID, err := dto.ParseUUID(req.ID)
+	if err != nil {
+		log.Error("invalid user id format", "err", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	user, err := u.service.Update(ctx, service.UpdateUserParams{
-		ID:       req.ID,
+		ID:       userID,
 		Username: req.Username,
 		Email:    req.Email,
 	})

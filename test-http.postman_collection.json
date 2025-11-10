@@ -86,7 +86,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": {\n    \"bytes\": \"00000000-0000-0000-0000-000000000000\",\n    \"valid\": true\n  },\n  \"username\": \"john_updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+							"raw": "{\n  \"id\": \"00000000-0000-0000-0000-000000000000\",\n  \"username\": \"john_updated\",\n  \"email\": \"john.updated@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/users/:id",

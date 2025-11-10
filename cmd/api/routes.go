@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"test-http/internal/config"
@@ -15,12 +16,14 @@ import (
 )
 
 func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) {
+	validate := validator.New()
+	
 	userRepo := db.New(dbPool)
 	userService := service.NewUserService(userRepo, logger)
 	userHandler := handlers.NewUserHandler(logger, userService)
 
 	userStatisticsService := service.NewUserStatisticsService(userRepo, logger)
-	statisticsHandler := handlers.NewStatisticsHandler(userStatisticsService, nil, logger)
+	statisticsHandler := handlers.NewStatisticsHandler(userStatisticsService, validate, logger)
 
 	readyHandler := handlers.NewReadyHandler(dbPool, cfg, logger)
 

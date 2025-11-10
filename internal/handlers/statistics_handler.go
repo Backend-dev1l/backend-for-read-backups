@@ -3,7 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"test-http/internal/db"
+	"test-http/internal/dto"
 	"test-http/internal/middleware"
 	"test-http/internal/service"
 	errorsPkg "test-http/pkg/errors_pkg"
@@ -34,9 +34,86 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 
 	log := s.logger.With(slog.String("trace_id", traceID))
 
-	log.Info("Statistics handler called")
+	log.Info("CreateStatistics handler called")
 
-	var req db.UserStatistic
+	var req dto.CreateStatisticsRequest
+
+	if err := render.DecodeJSON(r.Body, &req); err != nil {
+		log.Error("DecodeJSON failed", "err", err, "body", r.Body)
+		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
+	}
+
+	log.Info("Decoded request", "user_id", req.UserID, "total_words_learned", req.TotalWordsLearned, "accuracy", req.Accuracy, "total_time", req.TotalTime)
+
+	if err := s.validate.Struct(req); err != nil {
+		log.Error("validation failed", "err", err)
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	userUUID, err := dto.ParseUUID(req.UserID)
+	if err != nil {
+		log.Error("failed to parse user_id", "err", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	accuracy := dto.ParseNumeric(req.Accuracy)
+
+	statistics, err := s.service.Create(ctx, service.CreateUserStatisticsParams{
+		UserID:            userUUID,
+		TotalWordsLearned: req.TotalWordsLearned,
+		Accuracy:          accuracy,
+		TotalTime:         req.TotalTime,
+	})
+	if err != nil {
+		log.Error("UserStatisticsService.Create failed", "err", err)
+		return helper.HTTPError(w, errorsPkg.ContextCreatingUserStatisticsMissing.Err())
+	}
+
+	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
+	return nil
+}
+
+func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	traceID := middleware.GetTraceID(ctx)
+
+	log := s.logger.With(slog.String("trace_id", traceID))
+
+	log.Info("GetStatistics handler called")
+
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		log.Error("missing user_id in query parameters")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	userUUID, err := dto.ParseUUID(userID)
+	if err != nil {
+		log.Error("failed to parse user_id", "err", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	statistics, err := s.service.GetByID(ctx, userUUID)
+	if err != nil {
+		log.Error("UserStatisticsService.GetByID failed", "err", err)
+		return helper.HTTPError(w, errorsPkg.ContextGettingUserStatisticsMissing.Err())
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
+	return nil
+}
+
+func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	traceID := middleware.GetTraceID(ctx)
+
+	log := s.logger.With(slog.String("trace_id", traceID))
+
+	log.Info("UpdateStatistics handler called")
+
+	var req dto.UpdateStatisticsRequest
 
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err)
@@ -48,19 +125,55 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	statistics, err := s.service.Create(ctx, service.CreateUserStatisticsParams{
-		UserID:            req.UserID,
+	userUUID, err := dto.ParseUUID(req.UserID)
+	if err != nil {
+		log.Error("failed to parse user_id", "err", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	accuracy := dto.ParseNumeric(req.Accuracy)
+
+	statistics, err := s.service.Update(ctx, service.UpdateUserStatisticsParams{
+		UserID:            userUUID,
 		TotalWordsLearned: req.TotalWordsLearned,
-		Accuracy:          req.Accuracy,
+		Accuracy:          accuracy,
 		TotalTime:         req.TotalTime,
 	})
 	if err != nil {
-		log.Error("UserStatisticsService.Create failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ContextCreatingUserStatisticsMissing.Err())
+		log.Error("UserStatisticsService.Update failed", "err", err)
+		return helper.HTTPError(w, errorsPkg.ContextUpdatingUserStatisticsMissing.Err())
 	}
 
-	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, statistics)
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
 	return nil
+}
 
+func (s *StatisticsHandler) DeleteStatistics(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	traceID := middleware.GetTraceID(ctx)
+
+	log := s.logger.With(slog.String("trace_id", traceID))
+
+	log.Info("DeleteStatistics handler called")
+
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		log.Error("missing user_id in query parameters")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	userUUID, err := dto.ParseUUID(userID)
+	if err != nil {
+		log.Error("failed to parse user_id", "err", err)
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	if err := s.service.Delete(ctx, userUUID); err != nil {
+		log.Error("UserStatisticsService.Delete failed", "err", err)
+		return helper.HTTPError(w, errorsPkg.ContextDeletingUserStatisticsMissing.Err())
+	}
+
+	render.Status(r, http.StatusOK)
+	return nil
 }

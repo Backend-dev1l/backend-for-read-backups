@@ -35,6 +35,7 @@ func (s *ReadyHandler) ReadyzHandler(w http.ResponseWriter, r *http.Request) err
 
 	if err := s.pool.Ping(ctx); err != nil {
 		s.logger.Error("Database ping failed", "err", err)
+		render.Status(r, http.StatusInternalServerError)
 		return helper.HTTPError(w, fault.UnhandledError.Err())
 
 	}
