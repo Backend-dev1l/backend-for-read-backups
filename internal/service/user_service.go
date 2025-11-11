@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	"test-http/internal/db"
+	"test-http/internal/dto"
 	"test-http/internal/lib"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -24,36 +25,20 @@ func NewUserService(userRepo db.UserRepo, log *slog.Logger) *UserService {
 	}
 }
 
-type ListUsersFilters struct {
-	Limit  int32
-	Offset int32
-}
-
-type UpdateUserParams struct {
-	ID       pgtype.UUID
-	Username string
-	Email    string
-}
-
-type CreateUserParams struct {
-	Username string
-	Email    string
-}
-
-func (u *UserService) Create(ctx context.Context, params CreateUserParams) (db.User, error) {
+func (u *UserService) Create(ctx context.Context, request dto.CreateUserRequest) (db.User, error) {
 	lib.LogDebug(ctx, u.logger, "UserService.Create", "creating user",
-		slog.String("username", params.Username),
-		slog.String("email", params.Email),
+		slog.String("username", request.Username),
+		slog.String("email", request.Email),
 	)
 
 	user, err := u.userRepo.CreateUser(ctx, db.CreateUserParams{
-		Username: params.Username,
-		Email:    params.Email,
+		Username: request.Username,
+		Email:    request.Email,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.Create", "CreateUser", "failed to create user", err,
-			slog.String("username", params.Username),
-			slog.String("email", params.Email),
+			slog.String("username", request.Username),
+			slog.String("email", request.Email),
 		)
 		return db.User{}, InfrastructureUnexpected.Err()
 	}
@@ -66,15 +51,15 @@ func (u *UserService) Create(ctx context.Context, params CreateUserParams) (db.U
 	return user, nil
 }
 
-func (u *UserService) GetByID(ctx context.Context, id pgtype.UUID) (db.User, error) {
+func (u *UserService) GetByID(ctx context.Context, request dto.GetUserByIDRequest) (db.User, error) {
 	lib.LogDebug(ctx, u.logger, "UserService.GetByID", "getting user by id",
-		slog.String("user_id", id.String()),
+		slog.String("user_id", request.ID.String()),
 	)
 
-	user, err := u.userRepo.GetUser(ctx, id)
+	user, err := u.userRepo.GetUser(ctx, request.ID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.GetByID", "GetUser", "failed to get user by id", err,
-			slog.String("user_id", id.String()),
+			slog.String("user_id", request.ID.String()),
 		)
 		return db.User{}, InfrastructureUnexpected.Err()
 	}
@@ -82,21 +67,21 @@ func (u *UserService) GetByID(ctx context.Context, id pgtype.UUID) (db.User, err
 	return user, nil
 }
 
-func (u *UserService) GetByEmail(ctx context.Context, email string) (db.User, error) {
+func (u *UserService) GetByEmail(ctx context.Context, request dto.GetUserByEmailRequest) (db.User, error) {
 	lib.LogDebug(ctx, u.logger, "UserService.GetByEmail", "getting user by email",
-		slog.String("email", email),
+		slog.String("email", request.Email),
 	)
 
-	if !strings.Contains(email, "@") {
+	if !strings.Contains(request.Email, "@") {
 		lib.LogError(ctx, u.logger, "UserService.GetByEmail", "GetUserByEmail", "invalid email format", nil,
-			slog.String("email", email))
+			slog.String("email", request.Email))
 		return db.User{}, ValidationFailed.Err()
 	}
 
-	user, err := u.userRepo.GetUserByEmail(ctx, email)
+	user, err := u.userRepo.GetUserByEmail(ctx, request.Email)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.GetByEmail", "GetUserByEmail", "failed to get user by email", err,
-			slog.String("email", email),
+			slog.String("email", request.Email),
 		)
 		return db.User{}, InfrastructureUnexpected.Err()
 	}
@@ -104,50 +89,50 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (db.User, er
 	return user, nil
 }
 
-func (u *UserService) List(ctx context.Context, filters ListUsersFilters) ([]db.User, error) {
+func (u *UserService) List(ctx context.Context, request dto.ListUsersRequest) ([]db.User, error) {
 	lib.LogDebug(ctx, u.logger, "UserService.List", "listing users",
-		slog.Int("limit", int(filters.Limit)),
-		slog.Int("offset", int(filters.Offset)),
+		slog.Int("limit", int(request.Limit)),
+		slog.Int("offset", int(request.Offset)),
 	)
 
 	users, err := u.userRepo.ListUsers(ctx, db.ListUsersParams{
-		Limit:  filters.Limit,
-		Offset: filters.Offset,
+		Limit:  request.Limit,
+		Offset: request.Offset,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.List", "ListUsers", "failed to list users", err,
-			slog.Int("limit", int(filters.Limit)),
-			slog.Int("offset", int(filters.Offset)),
+			slog.Int("limit", int(request.Limit)),
+			slog.Int("offset", int(request.Offset)),
 		)
 		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.List", "users listed successfully",
 		slog.Int("count", len(users)),
-		slog.Int("limit", int(filters.Limit)),
-		slog.Int("offset", int(filters.Offset)),
+		slog.Int("limit", int(request.Limit)),
+		slog.Int("offset", int(request.Offset)),
 	)
 
 	return users, nil
 }
 
-func (u *UserService) Update(ctx context.Context, params UpdateUserParams) (db.User, error) {
+func (u *UserService) Update(ctx context.Context, request dto.UpdateUserRequest) (db.User, error) {
 	lib.LogDebug(ctx, u.logger, "UserService.Update", "updating user",
-		slog.String("user_id", params.ID.String()),
-		slog.String("username", params.Username),
-		slog.String("email", params.Email),
+		slog.String("user_id", request.ID.String()),
+		slog.String("username", request.Username),
+		slog.String("email", request.Email),
 	)
 
 	user, err := u.userRepo.UpdateUser(ctx, db.UpdateUserParams{
-		ID:       params.ID,
-		Username: params.Username,
-		Email:    params.Email,
+		ID:       request.ID,
+		Username: request.Username,
+		Email:    request.Email,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.Update", "UpdateUser", "failed to update user", err,
-			slog.String("user_id", params.ID.String()),
-			slog.String("username", params.Username),
-			slog.String("email", params.Email),
+			slog.String("user_id", request.ID.String()),
+			slog.String("username", request.Username),
+			slog.String("email", request.Email),
 		)
 		return db.User{}, InfrastructureUnexpected.Err()
 	}

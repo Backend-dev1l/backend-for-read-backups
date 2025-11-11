@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"test-http/internal/db"
+	"test-http/internal/dto"
 	"test-http/internal/lib"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,59 +24,42 @@ func NewUserSessionService(userSessionRepo db.UserSessionRepo, log *slog.Logger)
 	}
 }
 
-type CreateUserSessionParams struct {
-	UserID pgtype.UUID
-	Status string
-}
-
-type UpdateUserSessionParams struct {
-	ID      pgtype.UUID
-	Status  string
-	EndedAt pgtype.Timestamptz
-}
-
-type ListUserSessionsFilters struct {
-	UserID pgtype.UUID
-	Limit  int32
-	Offset int32
-}
-
-func (u *UserSessionService) Create(ctx context.Context, params CreateUserSessionParams) (db.UserSession, error) {
+func (u *UserSessionService) Create(ctx context.Context, request dto.CreateUserSessionRequest) (db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionService.Create", "creating user session",
-		slog.String("user_id", params.UserID.String()),
-		slog.String("status", params.Status),
+		slog.String("user_id", request.UserID.String()),
+		slog.String("status", request.Status),
 	)
 
 	session, err := u.userSessionRepo.CreateUserSession(ctx, db.CreateUserSessionParams{
-		UserID: params.UserID,
-		Status: params.Status,
+		UserID: request.UserID,
+		Status: request.Status,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.Create", "CreateUserSession", "failed to create user session", err,
-			slog.String("user_id", params.UserID.String()),
-			slog.String("status", params.Status),
+			slog.String("user_id", request.UserID.String()),
+			slog.String("status", request.Status),
 		)
 		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.Create", "user session created successfully",
 		slog.String("session_id", session.ID.String()),
-		slog.String("user_id", params.UserID.String()),
-		slog.String("status", params.Status),
+		slog.String("user_id", request.UserID.String()),
+		slog.String("status", request.Status),
 	)
 
 	return session, nil
 }
 
-func (u *UserSessionService) GetByID(ctx context.Context, id pgtype.UUID) (db.UserSession, error) {
+func (u *UserSessionService) GetByID(ctx context.Context, request dto.GetUserSessionRequest) (db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionService.GetByID", "getting user session by id",
-		slog.String("session_id", id.String()),
+		slog.String("session_id", request.ID.String()),
 	)
 
-	session, err := u.userSessionRepo.GetUserSession(ctx, id)
+	session, err := u.userSessionRepo.GetUserSession(ctx, request.ID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionRepository.GetByID", "GetUserSession", "failed to get user session by id", err,
-			slog.String("session_id", id.String()),
+			slog.String("session_id", request.ID.String()),
 		)
 		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}
@@ -83,28 +67,28 @@ func (u *UserSessionService) GetByID(ctx context.Context, id pgtype.UUID) (db.Us
 	return session, nil
 }
 
-func (u *UserSessionService) List(ctx context.Context, filters ListUserSessionsFilters) ([]db.UserSession, error) {
+func (u *UserSessionService) List(ctx context.Context, request dto.ListUserSessionsRequest) ([]db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionRepository.List", "listing user sessions",
-		slog.String("user_id", filters.UserID.String()),
-		slog.Int("limit", int(filters.Limit)),
-		slog.Int("offset", int(filters.Offset)),
+		slog.String("user_id", request.UserID.String()),
+		slog.Int("limit", int(request.Limit)),
+		slog.Int("offset", int(request.Offset)),
 	)
 
 	sessions, err := u.userSessionRepo.ListUserSessions(ctx, db.ListUserSessionsParams{
-		UserID: filters.UserID,
-		Limit:  filters.Limit,
-		Offset: filters.Offset,
+		UserID: request.UserID,
+		Limit:  request.Limit,
+		Offset: request.Offset,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.List", "ListUserSessions", "failed to list user sessions", err,
-			slog.String("user_id", filters.UserID.String()),
+			slog.String("user_id", request.UserID.String()),
 		)
 		return nil, InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserSessionService.List", "user sessions listed successfully",
 		slog.Int("count", len(sessions)),
-		slog.String("user_id", filters.UserID.String()),
+		slog.String("user_id", request.UserID.String()),
 	)
 
 	return sessions, nil
@@ -129,21 +113,21 @@ func (u *UserSessionService) ListActive(ctx context.Context) ([]db.UserSession, 
 	return sessions, nil
 }
 
-func (u *UserSessionService) Update(ctx context.Context, params UpdateUserSessionParams) (db.UserSession, error) {
+func (u *UserSessionService) Update(ctx context.Context, request dto.UpdateUserSessionRequest) (db.UserSession, error) {
 	lib.LogDebug(ctx, u.logger, "UserSessionService.Update", "updating user session",
-		slog.String("session_id", params.ID.String()),
-		slog.String("status", params.Status),
+		slog.String("session_id", request.ID.String()),
+		slog.String("status", request.Status),
 	)
 
 	session, err := u.userSessionRepo.UpdateUserSession(ctx, db.UpdateUserSessionParams{
-		ID:      params.ID,
-		Status:  params.Status,
-		EndedAt: params.EndedAt,
+		ID:      request.ID,
+		Status:  request.Status,
+		EndedAt: request.EndedAt,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserSessionService.Update", "UpdateUserSession", "failed to update user session", err,
-			slog.String("session_id", params.ID.String()),
-			slog.String("status", params.Status),
+			slog.String("session_id", request.ID.String()),
+			slog.String("status", request.Status),
 		)
 		return db.UserSession{}, InfrastructureUnexpected.Err()
 	}

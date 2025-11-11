@@ -16,6 +16,12 @@ INSERT INTO user_word_sets (
 )
 RETURNING *;
 
+-- name: UpdateUserWordSet :one
+UPDATE user_word_sets
+SET word_set_id = $2
+WHERE id = $1
+RETURNING *;
+
 -- name: DeleteUserWordSet :exec
 DELETE FROM user_word_sets
 WHERE id = $1;

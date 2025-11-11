@@ -1,18 +1,27 @@
 package dto
 
+import "github.com/jackc/pgx/v5/pgtype"
+
 type CreateUserWordSetRequest struct {
-	UserID    string `json:"user_id" validate:"required,uuid"`
-	WordSetID string `json:"word_set_id" validate:"required,uuid"`
+	UserID    pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	WordSetID pgtype.UUID `json:"word_set_id" validate:"required,uuid"`
 }
 
 type GetUserWordSetRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID `json:"id" validate:"required,uuid"`
 }
 
 type ListUserWordSetsRequest struct {
-	UserID string `json:"user_id" validate:"required,uuid"`
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	Limit  int32       `json:"limit" validate:"gte=0,lte=100"`
+	Offset int32       `json:"offset" validate:"gte=0"`
+}
+
+type UpdateUserWordSetRequest struct {
+	ID        pgtype.UUID `json:"id" validate:"required,uuid"`
+	WordSetID pgtype.UUID `json:"word_set_id" validate:"required,uuid"`
 }
 
 type DeleteUserWordSetRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID `json:"id" validate:"required,uuid"`
 }

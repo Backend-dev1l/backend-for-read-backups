@@ -1,29 +1,32 @@
 package dto
 
+import "github.com/jackc/pgx/v5/pgtype"
+
 type CreateUserSessionRequest struct {
-	UserID string `json:"user_id" validate:"required,uuid"`
-	Status string `json:"status" validate:"required,oneof=active completed"`
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	Status string      `json:"status" validate:"required,oneof=active completed"`
 }
 
 type UpdateUserSessionRequest struct {
-	ID     string `json:"id" validate:"required,uuid"`
-	Status string `json:"status" validate:"required,oneof=active completed"`
+	ID      pgtype.UUID        `json:"id" validate:"required,uuid"`
+	Status  string             `json:"status" validate:"required,oneof=active completed"`
+	EndedAt pgtype.Timestamptz `json:"ended_at"`
 }
 
 type GetUserSessionRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID `json:"id" validate:"required,uuid"`
 }
 
 type ListUserSessionsRequest struct {
-	UserID string `json:"user_id" validate:"required,uuid"`
-	Limit  int32  `json:"limit" validate:"gte=0,lte=100"`
-	Offset int32  `json:"offset" validate:"gte=0"`
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	Limit  int32       `json:"limit" validate:"gte=0,lte=100"`
+	Offset int32       `json:"offset" validate:"gte=0"`
 }
 
 type ListActiveUserSessionsRequest struct {
-	UserID string `json:"user_id" validate:"required,uuid"`
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
 }
 
 type DeleteUserSessionRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID `json:"id" validate:"required,uuid"`
 }

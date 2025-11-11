@@ -6,9 +6,8 @@ import (
 	"log/slog"
 
 	"test-http/internal/db"
+	"test-http/internal/dto"
 	"test-http/internal/lib"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserStatisticsService struct {
@@ -23,36 +22,22 @@ func NewUserStatisticsService(userStatistRepo db.UserStatisticsRepo, log *slog.L
 	}
 }
 
-type CreateUserStatisticsParams struct {
-	UserID            pgtype.UUID
-	TotalWordsLearned int32
-	Accuracy          pgtype.Numeric
-	TotalTime         int32
-}
-
-type UpdateUserStatisticsParams struct {
-	UserID            pgtype.UUID
-	TotalWordsLearned int32
-	Accuracy          pgtype.Numeric
-	TotalTime         int32
-}
-
-func (u *UserStatisticsService) Create(ctx context.Context, params CreateUserStatisticsParams) (db.UserStatistic, error) {
+func (u *UserStatisticsService) Create(ctx context.Context, request dto.CreateStatisticsRequest) (db.UserStatistic, error) {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.Create", "creating user statistics",
-		slog.String("user_id", params.UserID.String()),
-		slog.Int("total_words_learned", int(params.TotalWordsLearned)),
-		slog.Int("total_time", int(params.TotalTime)),
+		slog.String("user_id", request.UserID.String()),
+		slog.Int("total_words_learned", int(request.TotalWordsLearned)),
+		slog.Int("total_time", int(request.TotalTime)),
 	)
 
 	stats, err := u.userStatistRepo.CreateUserStatistics(ctx, db.CreateUserStatisticsParams{
-		UserID:            params.UserID,
-		TotalWordsLearned: params.TotalWordsLearned,
-		Accuracy:          params.Accuracy,
-		TotalTime:         params.TotalTime,
+		UserID:            request.UserID,
+		TotalWordsLearned: request.TotalWordsLearned,
+		Accuracy:          request.Accuracy,
+		TotalTime:         request.TotalTime,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Create", "CreateUserStatistics", "failed to create user statistics", err,
-			slog.String("user_id", params.UserID.String()),
+			slog.String("user_id", request.UserID.String()),
 		)
 		return db.UserStatistic{}, InfrastructureUnexpected.Err()
 	}
@@ -65,15 +50,15 @@ func (u *UserStatisticsService) Create(ctx context.Context, params CreateUserSta
 	return stats, nil
 }
 
-func (u *UserStatisticsService) GetByID(ctx context.Context, userID pgtype.UUID) (db.UserStatistic, error) {
+func (u *UserStatisticsService) GetByID(ctx context.Context, request dto.GetStatisticsRequest) (db.UserStatistic, error) {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.GetByID", "getting user statistics by user id",
-		slog.String("user_id", userID.String()),
+		slog.String("user_id", request.UserID.String()),
 	)
 
-	stats, err := u.userStatistRepo.GetUserStatistics(ctx, userID)
+	stats, err := u.userStatistRepo.GetUserStatistics(ctx, request.UserID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserStatisticsService.GetByID", "GetUserStatistics", "failed to get user statistics by user id", err,
-			slog.String("user_id", userID.String()),
+			slog.String("user_id", request.UserID.String()),
 		)
 		return db.UserStatistic{}, InfrastructureUnexpected.Err()
 	}
@@ -81,37 +66,43 @@ func (u *UserStatisticsService) GetByID(ctx context.Context, userID pgtype.UUID)
 	return stats, nil
 }
 
-func (u *UserStatisticsService) List(ctx context.Context, limit, offset int32) ([]db.UserStatistic, error) {
+func (u *UserStatisticsService) List(ctx context.Context, request dto.ListStatisticsRequest) ([]db.UserStatistic, error) {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.List", "listing user statistics",
-		slog.Int("limit", int(limit)),
-		slog.Int("offset", int(offset)),
+		slog.Int("limit", int(request.Limit)),
+		slog.Int("offset", int(request.Offset)),
 	)
 
-	// TODO: Implement repository method for listing statistics with pagination
-	// For now, returning empty list as this feature requires database query implementation
+	stats, err := u.userStatistRepo.ListUserStatistics(ctx, db.ListUserStatisticsParams{
+		Limit:  request.Limit,
+		Offset: request.Offset,
+	})
+	if err != nil {
+		lib.LogError(ctx, u.logger, "UserStatisticsService.List", "ListUserStatistics", "failed to list user statistics", err)
+		return nil, InfrastructureUnexpected.Err()
+	}
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.List", "list operation completed",
-		slog.Int("count", 0),
+		slog.Int("count", len(stats)),
 	)
 
 	return []db.UserStatistic{}, nil
 }
 
-func (u *UserStatisticsService) Update(ctx context.Context, params UpdateUserStatisticsParams) (db.UserStatistic, error) {
+func (u *UserStatisticsService) Update(ctx context.Context, request dto.UpdateStatisticsRequest) (db.UserStatistic, error) {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.Update", "updating user statistics",
-		slog.String("user_id", params.UserID.String()),
-		slog.Int("total_words_learned", int(params.TotalWordsLearned)),
-		slog.Int("total_time", int(params.TotalTime)),
+		slog.String("user_id", request.UserID.String()),
+		slog.Int("total_words_learned", int(request.TotalWordsLearned)),
+		slog.Int("total_time", int(request.TotalTime)),
 	)
 
 	stats, err := u.userStatistRepo.UpdateUserStatistics(ctx, db.UpdateUserStatisticsParams{
-		UserID:            params.UserID,
-		TotalWordsLearned: params.TotalWordsLearned,
-		Accuracy:          params.Accuracy,
-		TotalTime:         params.TotalTime,
+		UserID:            request.UserID,
+		TotalWordsLearned: request.TotalWordsLearned,
+		Accuracy:          request.Accuracy,
+		TotalTime:         request.TotalTime,
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Update", "UpdateUserStatistics", "failed to update user statistics", err,
-			slog.String("user_id", params.UserID.String()),
+			slog.String("user_id", request.UserID.String()),
 		)
 		return db.UserStatistic{}, InfrastructureUnexpected.Err()
 	}
@@ -124,21 +115,21 @@ func (u *UserStatisticsService) Update(ctx context.Context, params UpdateUserSta
 	return stats, nil
 }
 
-func (u *UserStatisticsService) Delete(ctx context.Context, userID pgtype.UUID) error {
+func (u *UserStatisticsService) Delete(ctx context.Context, request dto.DeleteStatisticsRequest) error {
 	lib.LogDebug(ctx, u.logger, "UserStatisticsService.Delete", "deleting user statistics",
-		slog.String("user_id", userID.String()),
+		slog.String("user_id", request.UserID.String()),
 	)
 
-	err := u.userStatistRepo.DeleteUserStatistics(ctx, userID)
+	err := u.userStatistRepo.DeleteUserStatistics(ctx, request.UserID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Delete", "DeleteUserStatistics", "failed to delete user statistics", err,
-			slog.String("user_id", userID.String()),
+			slog.String("user_id", request.UserID.String()),
 		)
 		return InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.Delete", "user statistics deleted successfully",
-		slog.String("user_id", userID.String()),
+		slog.String("user_id", request.UserID.String()),
 	)
 
 	return nil

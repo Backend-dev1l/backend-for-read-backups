@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	db "test-http/internal/db"
+	"test-http/internal/dto"
 	mockdb "test-http/internal/db/mocks"
 
 	"github.com/golang/mock/gomock"
@@ -23,7 +24,7 @@ func TestUserProgressService_Create_Success(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var uid, wid pgtype.UUID
-	params := CreateUserProgressParams{UserID: uid, WordID: wid, CorrectCount: 1, IncorrectCount: 0}
+	params := dto.CreateUserProgressRequest{UserID: uid, WordID: wid, CorrectCount: 1, IncorrectCount: 0}
 	want := db.UserProgress{UserID: uid, WordID: wid, CorrectCount: params.CorrectCount, IncorrectCount: params.IncorrectCount}
 
 	mockRepo.EXPECT().CreateUserProgress(gomock.Any(), db.CreateUserProgressParams{
@@ -51,7 +52,7 @@ func TestUserProgressService_Create_RepoError(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var uid, wid pgtype.UUID
-	params := CreateUserProgressParams{UserID: uid, WordID: wid, CorrectCount: 1, IncorrectCount: 0}
+	params := dto.CreateUserProgressRequest{UserID: uid, WordID: wid, CorrectCount: 1, IncorrectCount: 0}
 
 	mockRepo.EXPECT().CreateUserProgress(gomock.Any(), gomock.Any()).Return(db.UserProgress{}, errors.New("fail"))
 
@@ -73,7 +74,7 @@ func TestUserProgressService_GetByID_Success(t *testing.T) {
 	want := db.UserProgress{ID: id}
 	mockRepo.EXPECT().GetUserProgress(gomock.Any(), id).Return(want, nil)
 
-	got, err := svc.GetByID(context.Background(), id)
+	got, err := svc.GetByID(context.Background(), dto.GetUserProgressRequest{ID: id})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestUserProgressService_GetByID_RepoError(t *testing.T) {
 	var id pgtype.UUID
 	mockRepo.EXPECT().GetUserProgress(gomock.Any(), id).Return(db.UserProgress{}, errors.New("not found"))
 
-	_, err := svc.GetByID(context.Background(), id)
+	_, err := svc.GetByID(context.Background(), dto.GetUserProgressRequest{ID: id})
 	if err == nil {
 		t.Fatalf("expected error from repo, got nil")
 	}
@@ -112,7 +113,7 @@ func TestUserProgressService_GetByUserAndWord_Success(t *testing.T) {
 	want := db.UserProgress{UserID: uid, WordID: wid}
 	mockRepo.EXPECT().GetUserProgressByUserAndWord(gomock.Any(), params).Return(want, nil)
 
-	got, err := svc.GetByUserAndWord(context.Background(), uid, wid)
+	got, err := svc.GetByUserAndWord(context.Background(), dto.GetUserProgressByUserAndWordRequest{UserID: uid, WordID: wid})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -132,7 +133,7 @@ func TestUserProgressService_GetByUserAndWord_RepoError(t *testing.T) {
 	var uid, wid pgtype.UUID
 	mockRepo.EXPECT().GetUserProgressByUserAndWord(gomock.Any(), gomock.Any()).Return(db.UserProgress{}, errors.New("fail"))
 
-	_, err := svc.GetByUserAndWord(context.Background(), uid, wid)
+	_, err := svc.GetByUserAndWord(context.Background(), dto.GetUserProgressByUserAndWordRequest{UserID: uid, WordID: wid})
 	if err == nil {
 		t.Fatalf("expected error from repo, got nil")
 	}
@@ -147,9 +148,9 @@ func TestUserProgressService_List_Success(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var uid pgtype.UUID
-	filters := ListUserProgressFilters{UserID: uid, Limit: 10, Offset: 0}
+	filters := dto.ListUserProgressRequest{UserID: uid, Limit: 10, Offset: 0}
 	want := []db.UserProgress{{UserID: uid}}
-	mockRepo.EXPECT().ListUserProgress(gomock.Any(), uid).Return(want, nil)
+	mockRepo.EXPECT().ListUserProgress(gomock.Any(), db.ListUserProgressParams{UserID: uid, Limit: 10, Offset: 0}).Return(want, nil)
 
 	got, err := svc.List(context.Background(), filters)
 	if err != nil {
@@ -169,8 +170,8 @@ func TestUserProgressService_List_RepoError(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var uid pgtype.UUID
-	filters := ListUserProgressFilters{UserID: uid}
-	mockRepo.EXPECT().ListUserProgress(gomock.Any(), uid).Return(nil, errors.New("fail"))
+	filters := dto.ListUserProgressRequest{UserID: uid}
+	mockRepo.EXPECT().ListUserProgress(gomock.Any(), gomock.Any()).Return(nil, errors.New("fail"))
 
 	_, err := svc.List(context.Background(), filters)
 	if err == nil {
@@ -187,7 +188,7 @@ func TestUserProgressService_Update_Success(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var id pgtype.UUID
-	params := UpdateUserProgressParams{ID: id, CorrectCount: 2, IncorrectCount: 1}
+	params := dto.UpdateUserProgressRequest{ID: id, CorrectCount: 2, IncorrectCount: 1}
 	want := db.UserProgress{ID: id, CorrectCount: params.CorrectCount, IncorrectCount: params.IncorrectCount}
 
 	mockRepo.EXPECT().UpdateUserProgress(gomock.Any(), db.UpdateUserProgressParams{ID: id, CorrectCount: params.CorrectCount, IncorrectCount: params.IncorrectCount}).Return(want, nil)
@@ -210,7 +211,7 @@ func TestUserProgressService_Update_RepoError(t *testing.T) {
 	svc := NewUserProgressService(mockRepo, logger)
 
 	var id pgtype.UUID
-	params := UpdateUserProgressParams{ID: id}
+	params := dto.UpdateUserProgressRequest{ID: id}
 	mockRepo.EXPECT().UpdateUserProgress(gomock.Any(), gomock.Any()).Return(db.UserProgress{}, errors.New("fail"))
 
 	_, err := svc.Update(context.Background(), params)
@@ -230,7 +231,7 @@ func TestUserProgressService_Delete_Success(t *testing.T) {
 	var id pgtype.UUID
 	mockRepo.EXPECT().DeleteUserProgress(gomock.Any(), id).Return(nil)
 
-	err := svc.Delete(context.Background(), id)
+	err := svc.Delete(context.Background(), dto.DeleteUserProgressRequest{ID: id})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -247,7 +248,7 @@ func TestUserProgressService_Delete_RepoError(t *testing.T) {
 	var id pgtype.UUID
 	mockRepo.EXPECT().DeleteUserProgress(gomock.Any(), id).Return(errors.New("fail"))
 
-	err := svc.Delete(context.Background(), id)
+	err := svc.Delete(context.Background(), dto.DeleteUserProgressRequest{ID: id})
 	if err == nil {
 		t.Fatalf("expected error from repo, got nil")
 	}

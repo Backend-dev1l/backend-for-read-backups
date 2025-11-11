@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	db "test-http/internal/db"
+	"test-http/internal/dto"
 	mocks "test-http/internal/db/mocks"
 
 	"github.com/golang/mock/gomock"
@@ -31,7 +32,7 @@ func TestUserWordSetService_Create_Success(t *testing.T) {
 		WordSetID: wid,
 	}).Return(want, nil)
 
-	got, err := svc.Create(context.Background(), CreateUserWordSetParams{UserID: uid, WordSetID: wid})
+	got, err := svc.Create(context.Background(), dto.CreateUserWordSetRequest{UserID: uid, WordSetID: wid})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +52,7 @@ func TestUserWordSetService_Create_RepoError(t *testing.T) {
 	var uid, wid pgtype.UUID
 	mockRepo.EXPECT().CreateUserWordSet(gomock.Any(), gomock.Any()).Return(db.UserWordSet{}, errors.New("fail"))
 
-	_, err := svc.Create(context.Background(), CreateUserWordSetParams{UserID: uid, WordSetID: wid})
+	_, err := svc.Create(context.Background(), dto.CreateUserWordSetRequest{UserID: uid, WordSetID: wid})
 	if err == nil {
 		t.Fatalf("expected error from repo, got nil")
 	}
@@ -70,7 +71,7 @@ func TestUserWordSetService_GetByID_Success(t *testing.T) {
 
 	mockRepo.EXPECT().GetUserWordSet(gomock.Any(), id).Return(want, nil)
 
-	got, err := svc.GetByID(context.Background(), id)
+	got, err := svc.GetByID(context.Background(), dto.GetUserWordSetRequest{ID: id})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,9 +90,13 @@ func TestUserWordSetService_List_Success(t *testing.T) {
 
 	var uid pgtype.UUID
 	want := []db.UserWordSet{{UserID: uid}}
-	mockRepo.EXPECT().ListUserWordSets(gomock.Any(), uid).Return(want, nil)
+	mockRepo.EXPECT().ListUserWordSets(gomock.Any(), db.ListUserWordSetsParams{
+		UserID: uid,
+		Limit:  10,
+		Offset: 0,
+	}).Return(want, nil)
 
-	got, err := svc.List(context.Background(), ListUserWordSetsFilters{UserID: uid, Limit: 10, Offset: 0})
+	got, err := svc.List(context.Background(), dto.ListUserWordSetsRequest{UserID: uid, Limit: 10, Offset: 0})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

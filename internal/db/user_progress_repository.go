@@ -103,10 +103,17 @@ const listUserProgress = `-- name: ListUserProgress :many
 SELECT id, user_id, word_id, correct_count, incorrect_count, last_attempt FROM user_progress
 WHERE user_id = $1
 ORDER BY last_attempt DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListUserProgress(ctx context.Context, userID pgtype.UUID) ([]UserProgress, error) {
-	rows, err := q.db.Query(ctx, listUserProgress, userID)
+type ListUserProgressParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+func (q *Queries) ListUserProgress(ctx context.Context, arg ListUserProgressParams) ([]UserProgress, error) {
+	rows, err := q.db.Query(ctx, listUserProgress, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

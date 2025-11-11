@@ -1,18 +1,20 @@
 package dto
 
+import "github.com/jackc/pgx/v5/pgtype"
+
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`
 	Email    string `json:"email" validate:"required,email"`
 }
 
 type UpdateUserRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Email    string `json:"email" validate:"required,email"`
+	ID       pgtype.UUID `json:"id" validate:"required,uuid"`
+	Username string      `json:"username" validate:"required,min=3,max=50"`
+	Email    string      `json:"email" validate:"required,email"`
 }
 
 type GetUserByIDRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID `json:"id" validate:"required,uuid"`
 }
 
 type GetUserByEmailRequest struct {

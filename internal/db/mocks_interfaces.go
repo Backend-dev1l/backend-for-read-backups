@@ -37,6 +37,7 @@ type UserProgressRepo interface {
 type UserStatisticsRepo interface {
 	CreateUserStatistics(ctx context.Context, arg CreateUserStatisticsParams) (UserStatistic, error)
 	GetUserStatistics(ctx context.Context, userID pgtype.UUID) (UserStatistic, error)
+	ListUserStatistics(ctx context.Context, arg ListUserStatisticsParams) ([]UserStatistic, error)
 	UpdateUserStatistics(ctx context.Context, arg UpdateUserStatisticsParams) (UserStatistic, error)
 	DeleteUserStatistics(ctx context.Context, userID pgtype.UUID) error
 }
@@ -44,6 +45,7 @@ type UserStatisticsRepo interface {
 type UserWordSetRepo interface {
 	CreateUserWordSet(ctx context.Context, arg CreateUserWordSetParams) (UserWordSet, error)
 	GetUserWordSet(ctx context.Context, id pgtype.UUID) (UserWordSet, error)
-	ListUserWordSets(ctx context.Context, userID pgtype.UUID) ([]UserWordSet, error)
+	ListUserWordSets(ctx context.Context, arg ListUserWordSetsParams) ([]UserWordSet, error)
+	UpdateUserWordSet(ctx context.Context, arg UpdateUserWordSetParams) (UserWordSet, error)
 	DeleteUserWordSet(ctx context.Context, id pgtype.UUID) error
 }

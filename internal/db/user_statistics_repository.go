@@ -73,6 +73,43 @@ func (q *Queries) GetUserStatistics(ctx context.Context, userID pgtype.UUID) (Us
 	return i, err
 }
 
+const listUserStatistics = `-- name: ListUserStatistics :many
+SELECT user_id, total_words_learned, accuracy, total_time, updated_at FROM user_statistics
+ORDER BY updated_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListUserStatisticsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListUserStatistics(ctx context.Context, arg ListUserStatisticsParams) ([]UserStatistic, error) {
+	rows, err := q.db.Query(ctx, listUserStatistics, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []UserStatistic{}
+	for rows.Next() {
+		var i UserStatistic
+		if err := rows.Scan(
+			&i.UserID,
+			&i.TotalWordsLearned,
+			&i.Accuracy,
+			&i.TotalTime,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateUserStatistics = `-- name: UpdateUserStatistics :one
 UPDATE user_statistics
 SET total_words_learned = $1, accuracy = $2, total_time = $3, updated_at = NOW()

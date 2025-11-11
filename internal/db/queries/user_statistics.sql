@@ -2,6 +2,11 @@
 SELECT * FROM user_statistics
 WHERE user_id = $1 LIMIT 1;
 
+-- name: ListUserStatistics :many
+SELECT * FROM user_statistics
+ORDER BY updated_at DESC
+LIMIT $1 OFFSET $2;
+
 -- name: CreateUserStatistics :one
 INSERT INTO user_statistics (
   user_id, total_words_learned, accuracy, total_time

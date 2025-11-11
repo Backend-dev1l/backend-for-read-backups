@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	db "test-http/internal/db"
+	"test-http/internal/dto"
 	mockdb "test-http/internal/db/mocks"
 
 	"github.com/golang/mock/gomock"
@@ -28,7 +29,7 @@ func TestUserService_Create_Success(t *testing.T) {
 
 	mockRepo.EXPECT().CreateUser(gomock.Any(), params).Return(want, nil)
 
-	got, err := svc.Create(context.Background(), CreateUserParams{Username: params.Username, Email: params.Email})
+	got, err := svc.Create(context.Background(), dto.CreateUserRequest{Username: params.Username, Email: params.Email})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -45,7 +46,7 @@ func TestUserService_GetByEmail_InvalidEmail(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
-	_, err := svc.GetByEmail(context.Background(), "bad-email")
+	_, err := svc.GetByEmail(context.Background(), dto.GetUserByEmailRequest{Email: "bad-email"})
 	if err == nil {
 		t.Fatalf("expected validation error for invalid email, got nil")
 	}
@@ -61,7 +62,7 @@ func TestUserService_GetByEmail_RepoError(t *testing.T) {
 
 	mockRepo.EXPECT().GetUserByEmail(gomock.Any(), "nope@example.com").Return(db.User{}, errors.New("not found"))
 
-	_, err := svc.GetByEmail(context.Background(), "nope@example.com")
+	_, err := svc.GetByEmail(context.Background(), dto.GetUserByEmailRequest{Email: "nope@example.com"})
 	if err == nil {
 		t.Fatalf("expected error from repo, got nil")
 	}
@@ -78,7 +79,7 @@ func TestUserService_List_Success(t *testing.T) {
 	users := []db.User{{Username: "a"}, {Username: "b"}}
 	mockRepo.EXPECT().ListUsers(gomock.Any(), db.ListUsersParams{Limit: 10, Offset: 0}).Return(users, nil)
 
-	got, err := svc.List(context.Background(), ListUsersFilters{Limit: 10, Offset: 0})
+	got, err := svc.List(context.Background(), dto.ListUsersRequest{Limit: 10, Offset: 0})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -104,7 +105,7 @@ func TestUserService_Update_Success(t *testing.T) {
 	// We expect UpdateUser with any context and the params passed
 	mockRepo.EXPECT().UpdateUser(gomock.Any(), up).Return(want, nil)
 
-	got, err := svc.Update(context.Background(), UpdateUserParams{ID: id, Username: up.Username, Email: up.Email})
+	got, err := svc.Update(context.Background(), dto.UpdateUserRequest{ID: id, Username: up.Username, Email: up.Email})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

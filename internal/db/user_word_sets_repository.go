@@ -68,10 +68,17 @@ const listUserWordSets = `-- name: ListUserWordSets :many
 SELECT id, user_id, word_set_id, created_at FROM user_word_sets
 WHERE user_id = $1
 ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListUserWordSets(ctx context.Context, userID pgtype.UUID) ([]UserWordSet, error) {
-	rows, err := q.db.Query(ctx, listUserWordSets, userID)
+type ListUserWordSetsParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+func (q *Queries) ListUserWordSets(ctx context.Context, arg ListUserWordSetsParams) ([]UserWordSet, error) {
+	rows, err := q.db.Query(ctx, listUserWordSets, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -93,4 +100,28 @@ func (q *Queries) ListUserWordSets(ctx context.Context, userID pgtype.UUID) ([]U
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUserWordSet = `-- name: UpdateUserWordSet :one
+UPDATE user_word_sets
+SET word_set_id = $2
+WHERE id = $1
+RETURNING id, user_id, word_set_id, created_at
+`
+
+type UpdateUserWordSetParams struct {
+	ID        pgtype.UUID `json:"id"`
+	WordSetID pgtype.UUID `json:"word_set_id"`
+}
+
+func (q *Queries) UpdateUserWordSet(ctx context.Context, arg UpdateUserWordSetParams) (UserWordSet, error) {
+	row := q.db.QueryRow(ctx, updateUserWordSet, arg.ID, arg.WordSetID)
+	var i UserWordSet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.WordSetID,
+		&i.CreatedAt,
+	)
+	return i, err
 }

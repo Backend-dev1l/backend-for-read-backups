@@ -23,7 +23,7 @@ func TestUserSessionService_Create_Success(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var uid pgtype.UUID
-	params := CreateUserSessionParams{UserID: uid, Status: "active"}
+	params := dto.CreateUserSessionRequest{UserID: uid, Status: "active"}
 	want := db.UserSession{UserID: uid, Status: "active"}
 
 	mockRepo.EXPECT().CreateUserSession(gomock.Any(), db.CreateUserSessionParams{UserID: uid, Status: "active"}).Return(want, nil)
@@ -46,7 +46,7 @@ func TestUserSessionService_Create_RepoError(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var uid pgtype.UUID
-	params := CreateUserSessionParams{UserID: uid, Status: "active"}
+	params := dto.CreateUserSessionRequest{UserID: uid, Status: "active"}
 
 	mockRepo.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(db.UserSession{}, errors.New("db error"))
 
@@ -68,7 +68,7 @@ func TestUserSessionService_GetByID_Success(t *testing.T) {
 	want := db.UserSession{ID: id, Status: "active"}
 	mockRepo.EXPECT().GetUserSession(gomock.Any(), id).Return(want, nil)
 
-	got, err := svc.GetByID(context.Background(), id)
+	got, err := svc.GetByID(context.Background(), dto.GetUserSessionRequest{ID: id})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
