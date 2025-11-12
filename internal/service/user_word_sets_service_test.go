@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	db "test-http/internal/db"
-	"test-http/internal/dto"
 	mocks "test-http/internal/db/mocks"
+	"test-http/internal/dto"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5/pgtype"

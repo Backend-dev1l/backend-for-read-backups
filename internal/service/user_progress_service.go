@@ -8,6 +8,7 @@ import (
 	"test-http/internal/db"
 	"test-http/internal/dto"
 	"test-http/internal/lib"
+	errorsPkg "test-http/pkg/errors_pkg"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -49,7 +50,7 @@ func (u *UserProgressService) Create(ctx context.Context, request dto.CreateUser
 			slog.String("user_id", request.UserID.String()),
 			slog.String("word_id", request.WordID.String()),
 		)
-		return db.UserProgress{}, InfrastructureUnexpected.Err()
+		return db.UserProgress{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Create", "user progress created successfully",
@@ -69,7 +70,7 @@ func (u *UserProgressService) GetByID(ctx context.Context, request dto.GetUserPr
 		lib.LogError(ctx, u.logger, "UserProgressService.GetByID", "GetUserProgress", "failed to get user progress by id", err,
 			slog.String("progress_id", request.ID.String()),
 		)
-		return db.UserProgress{}, InfrastructureUnexpected.Err()
+		return db.UserProgress{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return progress, nil
@@ -90,7 +91,7 @@ func (u *UserProgressService) GetByUserAndWord(ctx context.Context, request dto.
 			slog.String("user_id", request.UserID.String()),
 			slog.String("word_id", request.WordID.String()),
 		)
-		return db.UserProgress{}, InfrastructureUnexpected.Err()
+		return db.UserProgress{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return progress, nil
@@ -108,7 +109,7 @@ func (u *UserProgressService) List(ctx context.Context, request dto.ListUserProg
 		lib.LogError(ctx, u.logger, "UserProgressService.List", "ListUserProgress", "failed to list user progress", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return nil, InfrastructureUnexpected.Err()
+		return nil, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.List", "user progress listed successfully",
@@ -134,7 +135,7 @@ func (u *UserProgressService) Update(ctx context.Context, request dto.UpdateUser
 		lib.LogError(ctx, u.logger, "UserProgressService.Update", "UpdateUserProgress", "failed to update user progress", err,
 			slog.String("progress_id", request.ID.String()),
 		)
-		return db.UserProgress{}, InfrastructureUnexpected.Err()
+		return db.UserProgress{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Update", "user progress updated successfully",
@@ -154,7 +155,7 @@ func (u *UserProgressService) Delete(ctx context.Context, request dto.DeleteUser
 		lib.LogError(ctx, u.logger, "UserProgressService.Delete", "DeleteUserProgress", "failed to delete user progress", err,
 			slog.String("progress_id", request.ID.String()),
 		)
-		return InfrastructureUnexpected.Err()
+		return errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogDebug(ctx, u.logger, "UserProgressService.Delete", "user progress deleted successfully",

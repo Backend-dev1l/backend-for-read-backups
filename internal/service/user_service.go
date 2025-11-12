@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"log/slog"
-
 	"test-http/internal/db"
 	"test-http/internal/dto"
 	"test-http/internal/lib"
+	errorsPkg "test-http/pkg/errors_pkg"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -40,7 +40,7 @@ func (u *UserService) Create(ctx context.Context, request dto.CreateUserRequest)
 			slog.String("username", request.Username),
 			slog.String("email", request.Email),
 		)
-		return db.User{}, InfrastructureUnexpected.Err()
+		return db.User{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.Create", "user created successfully",
@@ -61,7 +61,7 @@ func (u *UserService) GetByID(ctx context.Context, request dto.GetUserByIDReques
 		lib.LogError(ctx, u.logger, "UserService.GetByID", "GetUser", "failed to get user by id", err,
 			slog.String("user_id", request.ID.String()),
 		)
-		return db.User{}, InfrastructureUnexpected.Err()
+		return db.User{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return user, nil
@@ -75,7 +75,7 @@ func (u *UserService) GetByEmail(ctx context.Context, request dto.GetUserByEmail
 	if !strings.Contains(request.Email, "@") {
 		lib.LogError(ctx, u.logger, "UserService.GetByEmail", "GetUserByEmail", "invalid email format", nil,
 			slog.String("email", request.Email))
-		return db.User{}, ValidationFailed.Err()
+		return db.User{}, errorsPkg.ValidationError.Err()
 	}
 
 	user, err := u.userRepo.GetUserByEmail(ctx, request.Email)
@@ -83,7 +83,7 @@ func (u *UserService) GetByEmail(ctx context.Context, request dto.GetUserByEmail
 		lib.LogError(ctx, u.logger, "UserService.GetByEmail", "GetUserByEmail", "failed to get user by email", err,
 			slog.String("email", request.Email),
 		)
-		return db.User{}, InfrastructureUnexpected.Err()
+		return db.User{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return user, nil
@@ -104,7 +104,7 @@ func (u *UserService) List(ctx context.Context, request dto.ListUsersRequest) ([
 			slog.Int("limit", int(request.Limit)),
 			slog.Int("offset", int(request.Offset)),
 		)
-		return nil, InfrastructureUnexpected.Err()
+		return nil, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.List", "users listed successfully",
@@ -134,7 +134,7 @@ func (u *UserService) Update(ctx context.Context, request dto.UpdateUserRequest)
 			slog.String("username", request.Username),
 			slog.String("email", request.Email),
 		)
-		return db.User{}, InfrastructureUnexpected.Err()
+		return db.User{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.Update", "user updated successfully",
@@ -145,21 +145,30 @@ func (u *UserService) Update(ctx context.Context, request dto.UpdateUserRequest)
 	return user, nil
 }
 
-func (u *UserService) Delete(ctx context.Context, id pgtype.UUID) error {
+func (u *UserService) Delete(ctx context.Context, request dto.DeleteUserRequest) error {
 	lib.LogDebug(ctx, u.logger, "UserService.Delete", "deleting user",
-		slog.String("user_id", id.String()),
+		slog.String("user_id", request.ID),
 	)
 
-	err := u.userRepo.DeleteUser(ctx, id)
+	var uuid pgtype.UUID
+	err := uuid.Scan(request.ID)
+	if err != nil {
+		lib.LogError(ctx, u.logger, "UserService.Delete", "Scan", "failed to parse user id", err,
+			slog.String("user_id", request.ID),
+		)
+		return errorsPkg.ValidationError.Err()
+	}
+
+	err = u.userRepo.DeleteUser(ctx, uuid)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.Delete", "DeleteUser", "failed to delete user", err,
-			slog.String("user_id", id.String()),
+			slog.String("user_id", request.ID),
 		)
-		return InfrastructureUnexpected.Err()
+		return errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.Delete", "user deleted successfully",
-		slog.String("user_id", id.String()),
+		slog.String("user_id", request.ID),
 	)
 
 	return nil

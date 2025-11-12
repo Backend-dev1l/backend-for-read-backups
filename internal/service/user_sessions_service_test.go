@@ -9,6 +9,7 @@ import (
 
 	db "test-http/internal/db"
 	mocks "test-http/internal/db/mocks"
+	"test-http/internal/dto"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -88,7 +89,7 @@ func TestUserSessionService_GetByID_RepoError(t *testing.T) {
 	var id pgtype.UUID
 	mockRepo.EXPECT().GetUserSession(gomock.Any(), id).Return(db.UserSession{}, errors.New("not found"))
 
-	_, err := svc.GetByID(context.Background(), id)
+	_, err := svc.GetByID(context.Background(), dto.GetUserSessionRequest{ID: id})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -106,7 +107,7 @@ func TestUserSessionService_List_Success(t *testing.T) {
 	users := []db.UserSession{{UserID: uid}, {UserID: uid}}
 	mockRepo.EXPECT().ListUserSessions(gomock.Any(), db.ListUserSessionsParams{UserID: uid, Limit: 10, Offset: 0}).Return(users, nil)
 
-	got, err := svc.List(context.Background(), ListUserSessionsFilters{UserID: uid, Limit: 10, Offset: 0})
+	got, err := svc.List(context.Background(), dto.ListUserSessionsRequest{UserID: uid, Limit: 10, Offset: 0})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -126,7 +127,7 @@ func TestUserSessionService_List_RepoError(t *testing.T) {
 	var uid pgtype.UUID
 	mockRepo.EXPECT().ListUserSessions(gomock.Any(), db.ListUserSessionsParams{UserID: uid, Limit: 1, Offset: 0}).Return(nil, errors.New("db error"))
 
-	_, err := svc.List(context.Background(), ListUserSessionsFilters{UserID: uid, Limit: 1, Offset: 0})
+	_, err := svc.List(context.Background(), dto.ListUserSessionsRequest{UserID: uid, Limit: 1, Offset: 0})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -177,12 +178,13 @@ func TestUserSessionService_Update_Success(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var id pgtype.UUID
-	up := db.UpdateUserSessionParams{ID: id, Status: "ended"}
-	want := db.UserSession{ID: id, Status: "ended"}
+	var endedAt pgtype.Timestamptz
+	up := db.UpdateUserSessionParams{ID: id, Status: "active", EndedAt: endedAt}
+	want := db.UserSession{ID: id, Status: "active"}
 
 	mockRepo.EXPECT().UpdateUserSession(gomock.Any(), up).Return(want, nil)
 
-	got, err := svc.Update(context.Background(), UpdateUserSessionParams{ID: id, Status: up.Status})
+	got, err := svc.Update(context.Background(), dto.UpdateUserSessionRequest{ID: id, Status: up.Status, EndedAt: endedAt})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -200,11 +202,12 @@ func TestUserSessionService_Update_RepoError(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var id pgtype.UUID
-	up := db.UpdateUserSessionParams{ID: id, Status: "ended"}
+	var endedAt pgtype.Timestamptz
+	up := db.UpdateUserSessionParams{ID: id, Status: "active", EndedAt: endedAt}
 
 	mockRepo.EXPECT().UpdateUserSession(gomock.Any(), up).Return(db.UserSession{}, errors.New("db error"))
 
-	_, err := svc.Update(context.Background(), UpdateUserSessionParams{ID: id, Status: up.Status})
+	_, err := svc.Update(context.Background(), dto.UpdateUserSessionRequest{ID: id, Status: up.Status, EndedAt: endedAt})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}

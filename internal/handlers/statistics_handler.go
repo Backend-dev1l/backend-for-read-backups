@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type StatisticsHandler struct {
@@ -37,7 +38,6 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 	log.Info("CreateStatistics handler called")
 
 	var req dto.CreateStatisticsRequest
-
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err, "body", r.Body)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
@@ -50,18 +50,10 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(req.UserID)
-	if err != nil {
-		log.Error("failed to parse user_id", "err", err)
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	accuracy := dto.ParseNumeric(req.Accuracy)
-
-	statistics, err := s.service.Create(ctx, service.CreateUserStatisticsParams{
-		UserID:            userUUID,
+	statistics, err := s.service.Create(ctx, dto.CreateStatisticsRequest{
+		UserID:            req.UserID,
 		TotalWordsLearned: req.TotalWordsLearned,
-		Accuracy:          accuracy,
+		Accuracy:          req.Accuracy,
 		TotalTime:         req.TotalTime,
 	})
 	if err != nil {
@@ -70,7 +62,7 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 	}
 
 	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
+	render.JSON(w, r, statistics)
 	return nil
 }
 
@@ -88,20 +80,22 @@ func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(userID)
-	if err != nil {
-		log.Error("failed to parse user_id", "err", err)
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
+		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	statistics, err := s.service.GetByID(ctx, userUUID)
+	statistics, err := s.service.GetByID(ctx, dto.GetStatisticsRequest{
+		UserID: id,
+	})
 	if err != nil {
 		log.Error("UserStatisticsService.GetByID failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextGettingUserStatisticsMissing.Err())
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
+	render.JSON(w, r, statistics)
 	return nil
 }
 
@@ -114,7 +108,6 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 	log.Info("UpdateStatistics handler called")
 
 	var req dto.UpdateStatisticsRequest
-
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
@@ -125,18 +118,22 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(req.UserID)
-	if err != nil {
-		log.Error("failed to parse user_id", "err", err)
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		log.Error("missing user_id in query parameters")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
+		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	accuracy := dto.ParseNumeric(req.Accuracy)
-
-	statistics, err := s.service.Update(ctx, service.UpdateUserStatisticsParams{
-		UserID:            userUUID,
+	statistics, err := s.service.Update(ctx, dto.UpdateStatisticsRequest{
+		UserID:            id,
 		TotalWordsLearned: req.TotalWordsLearned,
-		Accuracy:          accuracy,
+		Accuracy:          req.Accuracy,
 		TotalTime:         req.TotalTime,
 	})
 	if err != nil {
@@ -145,7 +142,7 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, dto.ToStatisticsResponse(statistics))
+	render.JSON(w, r, statistics)
 	return nil
 }
 
@@ -163,13 +160,15 @@ func (s *StatisticsHandler) DeleteStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(userID)
-	if err != nil {
-		log.Error("failed to parse user_id", "err", err)
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
+		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	if err := s.service.Delete(ctx, userUUID); err != nil {
+	if err := s.service.Delete(ctx, dto.DeleteStatisticsRequest{
+		UserID: id,
+	}); err != nil {
 		log.Error("UserStatisticsService.Delete failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextDeletingUserStatisticsMissing.Err())
 	}

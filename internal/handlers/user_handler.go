@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserHandler struct {
@@ -44,7 +45,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	user, err := u.service.Create(ctx, service.CreateUserParams{
+	user, err := u.service.Create(ctx, dto.CreateUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 	})
@@ -65,19 +66,21 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	log.Info("GetUser handler started")
 
-	userID := chi.URLParam(r, "id")
-	if userID == "" {
+	userUUID := chi.URLParam(r, "id")
+	if userUUID == "" {
 		log.Error("missing user id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(userID)
-	if err != nil {
+	var id pgtype.UUID
+	if err := id.Scan(userUUID); err != nil {
 		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	user, err := u.service.GetByID(ctx, userUUID)
+	user, err := u.service.GetByID(ctx, dto.GetUserByIDRequest{
+		ID: id,
+	})
 	if err != nil {
 		log.Error("UserService.GetByID failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
@@ -103,9 +106,11 @@ func (u *UserHandler) UserEmail(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
-	user, err := u.service.GetByEmail(ctx, userEmail)
+	user, err := u.service.GetByEmail(ctx, dto.GetUserByEmailRequest{
+		Email: userEmail,
+	})
 	if err != nil {
-		log.Error("UserService.GetByEmail failed", "err", err)
+		log.Error("UserService.GetByEmail failed", slog.String("email", userEmail), err)
 		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
 
@@ -127,13 +132,15 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userUUID, err := dto.ParseUUID(userID)
-	if err != nil {
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
 		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	if err := u.service.Delete(ctx, userUUID); err != nil {
+	if err := u.service.Delete(ctx, dto.DeleteUserRequest{
+		ID: id,
+	}); err != nil {
 		log.Error("UserService.Delete failed", "err", err)
 		return helper.HTTPError(w, fault.UnhandledError.Err())
 	}
@@ -160,14 +167,20 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userID, err := dto.ParseUUID(req.ID)
-	if err != nil {
+	userID := chi.URLParam(r, "id")
+	if userID == "" {
+		log.Error("missing user id in query parameters")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
 		log.Error("invalid user id format", "err", err)
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	user, err := u.service.Update(ctx, service.UpdateUserParams{
-		ID:       userID,
+	user, err := u.service.Update(ctx, dto.UpdateUserRequest{
+		ID:       id,
 		Username: req.Username,
 		Email:    req.Email,
 	})

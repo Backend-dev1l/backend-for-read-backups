@@ -8,6 +8,7 @@ import (
 	"test-http/internal/db"
 	"test-http/internal/dto"
 	"test-http/internal/lib"
+	errorsPkg "test-http/pkg/errors_pkg"
 )
 
 type UserStatisticsService struct {
@@ -39,7 +40,7 @@ func (u *UserStatisticsService) Create(ctx context.Context, request dto.CreateSt
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Create", "CreateUserStatistics", "failed to create user statistics", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return db.UserStatistic{}, InfrastructureUnexpected.Err()
+		return db.UserStatistic{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.Create", "user statistics created successfully",
@@ -60,7 +61,7 @@ func (u *UserStatisticsService) GetByID(ctx context.Context, request dto.GetStat
 		lib.LogError(ctx, u.logger, "UserStatisticsService.GetByID", "GetUserStatistics", "failed to get user statistics by user id", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return db.UserStatistic{}, InfrastructureUnexpected.Err()
+		return db.UserStatistic{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return stats, nil
@@ -78,13 +79,13 @@ func (u *UserStatisticsService) List(ctx context.Context, request dto.ListStatis
 	})
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserStatisticsService.List", "ListUserStatistics", "failed to list user statistics", err)
-		return nil, InfrastructureUnexpected.Err()
+		return nil, errorsPkg.InfrastructureUnexpected.Err()
 	}
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.List", "list operation completed",
 		slog.Int("count", len(stats)),
 	)
 
-	return []db.UserStatistic{}, nil
+	return stats, nil
 }
 
 func (u *UserStatisticsService) Update(ctx context.Context, request dto.UpdateStatisticsRequest) (db.UserStatistic, error) {
@@ -104,7 +105,7 @@ func (u *UserStatisticsService) Update(ctx context.Context, request dto.UpdateSt
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Update", "UpdateUserStatistics", "failed to update user statistics", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return db.UserStatistic{}, InfrastructureUnexpected.Err()
+		return db.UserStatistic{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.Update", "user statistics updated successfully",
@@ -125,7 +126,7 @@ func (u *UserStatisticsService) Delete(ctx context.Context, request dto.DeleteSt
 		lib.LogError(ctx, u.logger, "UserStatisticsService.Delete", "DeleteUserStatistics", "failed to delete user statistics", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return InfrastructureUnexpected.Err()
+		return errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserStatisticsService.Delete", "user statistics deleted successfully",

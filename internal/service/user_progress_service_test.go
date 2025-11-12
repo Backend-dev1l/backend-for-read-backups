@@ -150,7 +150,7 @@ func TestUserProgressService_List_Success(t *testing.T) {
 	var uid pgtype.UUID
 	filters := dto.ListUserProgressRequest{UserID: uid, Limit: 10, Offset: 0}
 	want := []db.UserProgress{{UserID: uid}}
-	mockRepo.EXPECT().ListUserProgress(gomock.Any(), db.ListUserProgressParams{UserID: uid, Limit: 10, Offset: 0}).Return(want, nil)
+	mockRepo.EXPECT().ListUserProgress(gomock.Any(), uid).Return(want, nil)
 
 	got, err := svc.List(context.Background(), filters)
 	if err != nil {

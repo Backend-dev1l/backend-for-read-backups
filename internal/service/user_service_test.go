@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	db "test-http/internal/db"
-	"test-http/internal/dto"
 	mockdb "test-http/internal/db/mocks"
+	"test-http/internal/dto"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -122,13 +122,11 @@ func TestUserService_Delete_Success(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
-	// We'll use zero UUID
-	var id pgtype.UUID
-	_ = id
+	uuidStr := "550e8400-e29b-41d4-a716-446655440000"
 
 	mockRepo.EXPECT().DeleteUser(gomock.Any(), gomock.Any()).Return(nil)
 
-	err := svc.Delete(context.Background(), id)
+	err := svc.Delete(context.Background(), dto.DeleteUserRequest{ID: uuidStr})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"test-http/internal/db"
 	"test-http/internal/dto"
 	"test-http/internal/lib"
+	errorsPkg "test-http/pkg/errors_pkg"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -38,7 +39,7 @@ func (u *UserWordSetService) Create(ctx context.Context, request dto.CreateUserW
 			slog.String("user_id", request.UserID.String()),
 			slog.String("word_set_id", request.WordSetID.String()),
 		)
-		return db.UserWordSet{}, InfrastructureUnexpected.Err()
+		return db.UserWordSet{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.Create", "user word set created successfully",
@@ -60,7 +61,7 @@ func (u *UserWordSetService) GetByID(ctx context.Context, request dto.GetUserWor
 		lib.LogError(ctx, u.logger, "UserWordSetService.GetByID", "GetUserWordSet", "failed to get user word set by id", err,
 			slog.String("id", request.ID.String()),
 		)
-		return db.UserWordSet{}, InfrastructureUnexpected.Err()
+		return db.UserWordSet{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	return wordSet, nil
@@ -82,7 +83,7 @@ func (u *UserWordSetService) List(ctx context.Context, request dto.ListUserWordS
 		lib.LogError(ctx, u.logger, "UserWordSetService.List", "ListUserWordSets", "failed to list user word sets", err,
 			slog.String("user_id", request.UserID.String()),
 		)
-		return nil, InfrastructureUnexpected.Err()
+		return nil, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.List", "user word sets listed successfully",
@@ -108,7 +109,7 @@ func (u *UserWordSetService) Update(ctx context.Context, request dto.UpdateUserW
 			slog.String("id", request.ID.String()),
 			slog.String("word_set_id", request.WordSetID.String()),
 		)
-		return db.UserWordSet{}, InfrastructureUnexpected.Err()
+		return db.UserWordSet{}, errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.Update", "user word set updated successfully",
@@ -129,7 +130,7 @@ func (u *UserWordSetService) Delete(ctx context.Context, id pgtype.UUID) error {
 		lib.LogError(ctx, u.logger, "UserWordSetService.Delete", "DeleteUserWordSet", "failed to delete user word set", err,
 			slog.String("id", id.String()),
 		)
-		return InfrastructureUnexpected.Err()
+		return errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserWordSetService.Delete", "user word set deleted successfully",

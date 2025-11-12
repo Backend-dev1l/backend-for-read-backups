@@ -2,8 +2,6 @@ module test-http
 
 go 1.24.6
 
-toolchain go1.24.9
-
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/jackc/pgx/v5 v5.7.6
