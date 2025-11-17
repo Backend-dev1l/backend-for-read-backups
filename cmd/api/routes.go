@@ -44,9 +44,9 @@ func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logg
 		// --- Statistics ---
 		r.Route("/statistics", func(r chi.Router) {
 			r.Post("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.CreateStatistics(w, r) })
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.GetStatistics(w, r) })
-			r.Put("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.UpdateStatistics(w, r) })
-			r.Delete("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.DeleteStatistics(w, r) })
+			r.Get("/{user_id}", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.GetStatistics(w, r) })
+			r.Put("/{user_id}", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.UpdateStatistics(w, r) })
+			r.Delete("/{user_id}", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.DeleteStatistics(w, r) })
 		})
 	})
 

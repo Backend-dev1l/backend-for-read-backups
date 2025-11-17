@@ -70,7 +70,7 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	defer r.Body.Close()
 
-	userIDStr := chi.URLParam(r, "user_id")
+	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		log.Error("missing user id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
