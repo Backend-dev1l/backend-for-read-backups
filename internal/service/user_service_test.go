@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"testing"
 
-	db "test-http/internal/db"
-	mockdb "test-http/internal/db/mocks"
+	"test-http/internal/db"
+	"test-http/internal/db/mocks"
 	"test-http/internal/dto"
 
 	"github.com/golang/mock/gomock"
@@ -19,7 +19,7 @@ func TestUserService_Create_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	// minimal no-op logger for tests
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
@@ -42,7 +42,7 @@ func TestUserService_GetByEmail_InvalidEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
@@ -56,7 +56,7 @@ func TestUserService_GetByEmail_RepoError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
@@ -72,7 +72,7 @@ func TestUserService_List_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
@@ -92,7 +92,7 @@ func TestUserService_Update_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
@@ -118,15 +118,19 @@ func TestUserService_Delete_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := mockdb.NewMockUserRepo(ctrl)
+	mockRepo := mocks.NewMockUserRepo(ctrl)
 	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 	svc := NewUserService(mockRepo, logger)
 
 	uuidStr := "550e8400-e29b-41d4-a716-446655440000"
+	var id pgtype.UUID
+	if err := id.Scan(uuidStr); err != nil {
+		t.Fatalf("failed to convert uuid")
+	}
 
 	mockRepo.EXPECT().DeleteUser(gomock.Any(), gomock.Any()).Return(nil)
 
-	err := svc.Delete(context.Background(), dto.DeleteUserRequest{ID: uuidStr})
+	err := svc.Delete(context.Background(), dto.DeleteUserRequest{ID: id})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

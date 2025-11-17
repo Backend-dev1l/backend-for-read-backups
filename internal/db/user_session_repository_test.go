@@ -7,7 +7,6 @@ import (
 	"test-http/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +23,7 @@ func TestUserSessionRepository_CRUD(t *testing.T) {
 
 	t.Run("Create/Get/Update/Delete session", func(t *testing.T) {
 		arg := CreateUserSessionParams{
-			UserID: pgtype.UUID{Bytes: userID, Valid: true},
+			UserID: testutil.NewPgUUID(t, userID),
 			Status: "active",
 		}
 		_, err := queries.CreateUserSession(ctx, arg)
@@ -43,7 +42,7 @@ func TestUserSessionRepository_EdgeCases(t *testing.T) {
 
 	t.Run("FK violation", func(t *testing.T) {
 		arg := CreateUserSessionParams{
-			UserID: pgtype.UUID{Bytes: uuid.New(), Valid: true},
+			UserID: testutil.RandomPgUUID(t),
 			Status: "active",
 		}
 		_, err := queries.CreateUserSession(ctx, arg)
@@ -52,7 +51,7 @@ func TestUserSessionRepository_EdgeCases(t *testing.T) {
 
 	t.Run("NULL violation", func(t *testing.T) {
 		arg := CreateUserSessionParams{
-			UserID: pgtype.UUID{},
+			UserID: testutil.EmptyPgUUID(),
 			Status: "",
 		}
 		_, err := queries.CreateUserSession(ctx, arg)

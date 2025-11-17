@@ -2,13 +2,11 @@ package db
 
 import (
 	"context"
-	"math/big"
 	"testing"
 
 	"test-http/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,9 +23,9 @@ func TestUserStatisticsRepository_CRUD(t *testing.T) {
 
 	t.Run("Create/Get/Update/Delete statistics", func(t *testing.T) {
 		arg := CreateUserStatisticsParams{
-			UserID:            pgtype.UUID{Bytes: userID, Valid: true},
+			UserID:            testutil.NewPgUUID(t, userID),
 			TotalWordsLearned: 10,
-			Accuracy:          pgtype.Numeric{Int: big.NewInt(0), Valid: true},
+			Accuracy:          testutil.NewPgNumeric(t, 85.5),
 			TotalTime:         3600,
 		}
 		_, err := queries.CreateUserStatistics(ctx, arg)
@@ -46,9 +44,9 @@ func TestUserStatisticsRepository_EdgeCases(t *testing.T) {
 
 	t.Run("FK violation", func(t *testing.T) {
 		arg := CreateUserStatisticsParams{
-			UserID:            pgtype.UUID{Bytes: uuid.New(), Valid: true},
+			UserID:            testutil.RandomPgUUID(t),
 			TotalWordsLearned: 1,
-			Accuracy:          pgtype.Numeric{Int: big.NewInt(0), Valid: true},
+			Accuracy:          testutil.NewPgNumeric(t, 90.0),
 			TotalTime:         10,
 		}
 		_, err := queries.CreateUserStatistics(ctx, arg)
@@ -57,9 +55,9 @@ func TestUserStatisticsRepository_EdgeCases(t *testing.T) {
 
 	t.Run("NULL violation", func(t *testing.T) {
 		arg := CreateUserStatisticsParams{
-			UserID:            pgtype.UUID{},
+			UserID:            testutil.EmptyPgUUID(),
 			TotalWordsLearned: 0,
-			Accuracy:          pgtype.Numeric{},
+			Accuracy:          testutil.EmptyPgNumeric(),
 			TotalTime:         0,
 		}
 		_, err := queries.CreateUserStatistics(ctx, arg)

@@ -8,13 +8,13 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	ID       pgtype.UUID `json:"id" validate:"required,uuid"`
-	Username string      `json:"username" validate:"required,min=3,max=50"`
-	Email    string      `json:"email" validate:"required,email"`
+	ID       pgtype.UUID
+	Username string `json:"username" validate:"required,min=3,max=50"`
+	Email    string `json:"email" validate:"required,email"`
 }
 
 type GetUserByIDRequest struct {
-	ID pgtype.UUID `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID
 }
 
 type GetUserByEmailRequest struct {
@@ -22,7 +22,7 @@ type GetUserByEmailRequest struct {
 }
 
 type DeleteUserRequest struct {
-	ID string `json:"id" validate:"required,uuid"`
+	ID pgtype.UUID
 }
 
 type ListUsersRequest struct {

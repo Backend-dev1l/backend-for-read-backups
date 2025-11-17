@@ -9,6 +9,7 @@ import (
 	"test-http/internal/dto"
 	"test-http/internal/lib"
 	errorsPkg "test-http/pkg/errors_pkg"
+	"test-http/pkg/helper"
 )
 
 type UserStatisticsService struct {
@@ -30,10 +31,18 @@ func (u *UserStatisticsService) Create(ctx context.Context, request dto.CreateSt
 		slog.Int("total_time", int(request.TotalTime)),
 	)
 
+	accuracy, err := helper.ToNumeric(request.Accuracy)
+	if err != nil {
+		lib.LogError(ctx, u.logger, "UserStatisticsService.Create", "ToNumeric", "failed to convert accuracy", err,
+			slog.String("user_id", request.UserID.String()),
+		)
+		return db.UserStatistic{}, errorsPkg.InfrastructureUnexpected.Err()
+	}
+
 	stats, err := u.userStatistRepo.CreateUserStatistics(ctx, db.CreateUserStatisticsParams{
 		UserID:            request.UserID,
 		TotalWordsLearned: request.TotalWordsLearned,
-		Accuracy:          request.Accuracy,
+		Accuracy:          accuracy,
 		TotalTime:         request.TotalTime,
 	})
 	if err != nil {
@@ -95,10 +104,18 @@ func (u *UserStatisticsService) Update(ctx context.Context, request dto.UpdateSt
 		slog.Int("total_time", int(request.TotalTime)),
 	)
 
+	accuracy, err := helper.ToNumeric(request.Accuracy)
+	if err != nil {
+		lib.LogError(ctx, u.logger, "UserStatisticsService.Update", "ToNumeric", "failed to convert accuracy", err,
+			slog.String("user_id", request.UserID.String()),
+		)
+		return db.UserStatistic{}, errorsPkg.InfrastructureUnexpected.Err()
+	}
+
 	stats, err := u.userStatistRepo.UpdateUserStatistics(ctx, db.UpdateUserStatisticsParams{
 		UserID:            request.UserID,
 		TotalWordsLearned: request.TotalWordsLearned,
-		Accuracy:          request.Accuracy,
+		Accuracy:          accuracy,
 		TotalTime:         request.TotalTime,
 	})
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 
 func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logger *slog.Logger) {
 	validate := validator.New()
-	
+
 	userRepo := db.New(dbPool)
 	userService := service.NewUserService(userRepo, logger)
 	userHandler := handlers.NewUserHandler(logger, userService)
@@ -44,6 +44,9 @@ func RegisterRoutes(r chi.Router, dbPool *pgxpool.Pool, cfg *config.Config, logg
 		// --- Statistics ---
 		r.Route("/statistics", func(r chi.Router) {
 			r.Post("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.CreateStatistics(w, r) })
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.GetStatistics(w, r) })
+			r.Put("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.UpdateStatistics(w, r) })
+			r.Delete("/", func(w http.ResponseWriter, r *http.Request) { _ = statisticsHandler.DeleteStatistics(w, r) })
 		})
 	})
 

@@ -5,12 +5,12 @@
 package mocks
 
 import (
-	context "context"
-	reflect "reflect"
-	db "test-http/internal/db"
+	"context"
+	"reflect"
+	"test-http/internal/db"
 
-	gomock "github.com/golang/mock/gomock"
-	pgtype "github.com/jackc/pgx/v5/pgtype"
+	"github.com/golang/mock/gomock"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // MockUserRepo is a mock of UserRepo interface.

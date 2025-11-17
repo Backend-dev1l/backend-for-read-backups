@@ -8,6 +8,8 @@ import (
 
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -130,4 +132,40 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool, tables ...string) {
 	if err != nil {
 		t.Fatalf("failed to cleanup db: %v", err)
 	}
+}
+
+// NewPgUUID creates a pgtype.UUID from uuid.UUID
+func NewPgUUID(t *testing.T, id uuid.UUID) pgtype.UUID {
+	t.Helper()
+	var pgUUID pgtype.UUID
+	if err := pgUUID.Scan(id.String()); err != nil {
+		t.Fatalf("failed to create pgtype.UUID: %v", err)
+	}
+	return pgUUID
+}
+
+// RandomPgUUID creates a random pgtype.UUID
+func RandomPgUUID(t *testing.T) pgtype.UUID {
+	t.Helper()
+	return NewPgUUID(t, uuid.New())
+}
+
+// NewPgNumeric creates a pgtype.Numeric from float64
+func NewPgNumeric(t *testing.T, value float64) pgtype.Numeric {
+	t.Helper()
+	var num pgtype.Numeric
+	if err := num.Scan(value); err != nil {
+		t.Fatalf("failed to create pgtype.Numeric: %v", err)
+	}
+	return num
+}
+
+// EmptyPgUUID creates an invalid/NULL pgtype.UUID
+func EmptyPgUUID() pgtype.UUID {
+	return pgtype.UUID{}
+}
+
+// EmptyPgNumeric creates an invalid/NULL pgtype.Numeric
+func EmptyPgNumeric() pgtype.Numeric {
+	return pgtype.Numeric{}
 }

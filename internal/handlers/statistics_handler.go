@@ -10,9 +10,10 @@ import (
 
 	"test-http/pkg/helper"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 type StatisticsHandler struct {
@@ -37,25 +38,27 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 
 	log.Info("CreateStatistics handler called")
 
+	defer r.Body.Close()
+
 	var req dto.CreateStatisticsRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
-		log.Error("DecodeJSON failed", "err", err, "body", r.Body)
+		log.Error("DecodeJSON failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
-	log.Info("Decoded request", "user_id", req.UserID, "total_words_learned", req.TotalWordsLearned, "accuracy", req.Accuracy, "total_time", req.TotalTime)
+	log.Info("Decoded request", "user_id", req.UserID.String(), "total_words_learned", req.TotalWordsLearned, "accuracy", req.Accuracy, "total_time", req.TotalTime)
 
 	if err := s.validate.Struct(req); err != nil {
 		log.Error("validation failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	statistics, err := s.service.Create(ctx, dto.CreateStatisticsRequest{
-		UserID:            req.UserID,
-		TotalWordsLearned: req.TotalWordsLearned,
-		Accuracy:          req.Accuracy,
-		TotalTime:         req.TotalTime,
-	})
+	if !req.UserID.Valid {
+		log.Error("invalid user_id")
+		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+	}
+
+	statistics, err := s.service.Create(ctx, req)
 	if err != nil {
 		log.Error("UserStatisticsService.Create failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextCreatingUserStatisticsMissing.Err())
@@ -74,24 +77,29 @@ func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request
 
 	log.Info("GetStatistics handler called")
 
-	userID := r.URL.Query().Get("user_id")
-	if userID == "" {
+	defer r.Body.Close()
+
+	userIDStr := chi.URLParam(r, "user_id")
+	if userIDStr == "" {
 		log.Error("missing user_id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	var id pgtype.UUID
-	if err := id.Scan(userID); err != nil {
-		log.Error("invalid user id format", "err", err)
+	if _, err := uuid.Parse(userIDStr); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	userID, err := helper.ToUUID(userIDStr)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	statistics, err := s.service.GetByID(ctx, dto.GetStatisticsRequest{
-		UserID: id,
+		UserID: userID,
 	})
 	if err != nil {
 		log.Error("UserStatisticsService.GetByID failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ContextGettingUserStatisticsMissing.Err())
+		return helper.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -107,6 +115,8 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 
 	log.Info("UpdateStatistics handler called")
 
+	defer r.Body.Close()
+
 	var req dto.UpdateStatisticsRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err)
@@ -118,24 +128,12 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userID := r.URL.Query().Get("user_id")
-	if userID == "" {
-		log.Error("missing user_id in query parameters")
+	if !req.UserID.Valid {
+		log.Error("invalid user_id")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	var id pgtype.UUID
-	if err := id.Scan(userID); err != nil {
-		log.Error("invalid user id format", "err", err)
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	statistics, err := s.service.Update(ctx, dto.UpdateStatisticsRequest{
-		UserID:            id,
-		TotalWordsLearned: req.TotalWordsLearned,
-		Accuracy:          req.Accuracy,
-		TotalTime:         req.TotalTime,
-	})
+	statistics, err := s.service.Update(ctx, req)
 	if err != nil {
 		log.Error("UserStatisticsService.Update failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextUpdatingUserStatisticsMissing.Err())
@@ -154,23 +152,28 @@ func (s *StatisticsHandler) DeleteStatistics(w http.ResponseWriter, r *http.Requ
 
 	log.Info("DeleteStatistics handler called")
 
-	userID := r.URL.Query().Get("user_id")
-	if userID == "" {
+	defer r.Body.Close()
+
+	userIDStr := chi.URLParam(r, "user_id")
+	if userIDStr == "" {
 		log.Error("missing user_id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	var id pgtype.UUID
-	if err := id.Scan(userID); err != nil {
-		log.Error("invalid user id format", "err", err)
+	if _, err := uuid.Parse(userIDStr); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
+	userID, err := helper.ToUUID(userIDStr)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	if err := s.service.Delete(ctx, dto.DeleteStatisticsRequest{
-		UserID: id,
+		UserID: userID,
 	}); err != nil {
 		log.Error("UserStatisticsService.Delete failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ContextDeletingUserStatisticsMissing.Err())
+		return helper.HTTPError(w, errorsPkg.ContextDeletingUserStatisticsMissing.New())
 	}
 
 	render.Status(r, http.StatusOK)

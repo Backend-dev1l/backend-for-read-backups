@@ -14,5 +14,3 @@ const (
 	ContextGettingUserMissing            fault.Code = "CONTEXT_GETTING_USER_MISSING"
 	InfrastructureUnexpected             fault.Code = "INFRASTRUCTURE_UNEXPECTED"
 )
-
-const ()

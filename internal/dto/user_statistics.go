@@ -3,17 +3,17 @@ package dto
 import "github.com/jackc/pgx/v5/pgtype"
 
 type CreateStatisticsRequest struct {
-	UserID            pgtype.UUID    `json:"user_id" validate:"required,uuid"`
-	TotalWordsLearned int32          `json:"total_words_learned" validate:"gte=0"`
-	Accuracy          pgtype.Numeric `json:"accuracy" validate:"gte=0,lte=100"`
-	TotalTime         int32          `json:"total_time" validate:"gte=0"`
+	UserID            pgtype.UUID `json:"user_id" validate:"required"`
+	TotalWordsLearned int32       `json:"total_words_learned" validate:"gte=0"`
+	Accuracy          float64     `json:"accuracy" validate:"gte=0,lte=100"`
+	TotalTime         int32       `json:"total_time" validate:"gte=0"`
 }
 
 type UpdateStatisticsRequest struct {
-	UserID            pgtype.UUID    `json:"user_id" validate:"required,uuid"`
-	TotalWordsLearned int32          `json:"total_words_learned" validate:"gte=0"`
-	Accuracy          pgtype.Numeric `json:"accuracy" validate:"gte=0,lte=100"`
-	TotalTime         int32          `json:"total_time" validate:"gte=0"`
+	UserID            pgtype.UUID `json:"user_id" validate:"required"`
+	TotalWordsLearned int32       `json:"total_words_learned" validate:"gte=0"`
+	Accuracy          float64     `json:"accuracy" validate:"gte=0,lte=100"`
+	TotalTime         int32       `json:"total_time" validate:"gte=0"`
 }
 
 type ListStatisticsRequest struct {
@@ -22,9 +22,9 @@ type ListStatisticsRequest struct {
 }
 
 type GetStatisticsRequest struct {
-	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	UserID pgtype.UUID
 }
 
 type DeleteStatisticsRequest struct {
-	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
+	UserID pgtype.UUID
 }

@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"testing"
 
-	db "test-http/internal/db"
-	mocks "test-http/internal/db/mocks"
+	"test-http/internal/db"
+	"test-http/internal/db/mocks"
 	"test-http/internal/dto"
 
 	"github.com/golang/mock/gomock"
@@ -239,6 +239,7 @@ func TestUserSessionService_Delete_RepoError(t *testing.T) {
 	svc := NewUserSessionService(mockRepo, logger)
 
 	var id pgtype.UUID
+
 	mockRepo.EXPECT().DeleteUserSession(gomock.Any(), id).Return(errors.New("db error"))
 
 	err := svc.Delete(context.Background(), id)

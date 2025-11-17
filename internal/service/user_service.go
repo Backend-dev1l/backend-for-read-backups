@@ -9,8 +9,6 @@ import (
 	"test-http/internal/dto"
 	"test-http/internal/lib"
 	errorsPkg "test-http/pkg/errors_pkg"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserService struct {
@@ -147,28 +145,19 @@ func (u *UserService) Update(ctx context.Context, request dto.UpdateUserRequest)
 
 func (u *UserService) Delete(ctx context.Context, request dto.DeleteUserRequest) error {
 	lib.LogDebug(ctx, u.logger, "UserService.Delete", "deleting user",
-		slog.String("user_id", request.ID),
+		slog.String("user_id", request.ID.String()),
 	)
 
-	var uuid pgtype.UUID
-	err := uuid.Scan(request.ID)
-	if err != nil {
-		lib.LogError(ctx, u.logger, "UserService.Delete", "Scan", "failed to parse user id", err,
-			slog.String("user_id", request.ID),
-		)
-		return errorsPkg.ValidationError.Err()
-	}
-
-	err = u.userRepo.DeleteUser(ctx, uuid)
+	err := u.userRepo.DeleteUser(ctx, request.ID)
 	if err != nil {
 		lib.LogError(ctx, u.logger, "UserService.Delete", "DeleteUser", "failed to delete user", err,
-			slog.String("user_id", request.ID),
+			slog.String("user_id", request.ID.String()),
 		)
 		return errorsPkg.InfrastructureUnexpected.Err()
 	}
 
 	lib.LogInfo(ctx, u.logger, "UserService.Delete", "user deleted successfully",
-		slog.String("user_id", request.ID),
+		slog.String("user_id", request.ID.String()),
 	)
 
 	return nil

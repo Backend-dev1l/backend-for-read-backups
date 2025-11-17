@@ -7,7 +7,6 @@ import (
 	"test-http/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,8 +24,8 @@ func TestUserProgressRepository_CRUD(t *testing.T) {
 
 	t.Run("Create/Get/Update/Delete progress", func(t *testing.T) {
 		pArg := CreateUserProgressParams{
-			UserID:         pgtype.UUID{Bytes: anyUserID, Valid: true},
-			WordID:         pgtype.UUID{Bytes: anyWordID, Valid: true},
+			UserID:         testutil.NewPgUUID(t, anyUserID),
+			WordID:         testutil.NewPgUUID(t, anyWordID),
 			CorrectCount:   2,
 			IncorrectCount: 1,
 		}
@@ -46,8 +45,8 @@ func TestUserProgressRepository_EdgeCases(t *testing.T) {
 
 	t.Run("NULL violation", func(t *testing.T) {
 		arg := CreateUserProgressParams{
-			UserID:         pgtype.UUID{},
-			WordID:         pgtype.UUID{},
+			UserID:         testutil.EmptyPgUUID(),
+			WordID:         testutil.EmptyPgUUID(),
 			CorrectCount:   0,
 			IncorrectCount: 0,
 		}
@@ -57,8 +56,8 @@ func TestUserProgressRepository_EdgeCases(t *testing.T) {
 
 	t.Run("FK violation", func(t *testing.T) {
 		arg := CreateUserProgressParams{
-			UserID:         pgtype.UUID{Bytes: uuid.New(), Valid: true},
-			WordID:         pgtype.UUID{Bytes: uuid.New(), Valid: true},
+			UserID:         testutil.RandomPgUUID(t),
+			WordID:         testutil.RandomPgUUID(t),
 			CorrectCount:   1,
 			IncorrectCount: 0,
 		}
@@ -68,7 +67,7 @@ func TestUserProgressRepository_EdgeCases(t *testing.T) {
 
 	// Для race и CHECK нужно знать ограничения схемы, допустим ограничение на уникальность по (user_id, word_id)
 	t.Run("UNIQUE violation + race", func(t *testing.T) {
-		fk := pgtype.UUID{Bytes: uuid.New(), Valid: true}
+		fk := testutil.RandomPgUUID(t)
 		arg := CreateUserProgressParams{
 			UserID:         fk,
 			WordID:         fk,

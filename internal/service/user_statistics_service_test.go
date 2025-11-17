@@ -85,26 +85,27 @@ func TestUserStatisticsService_Create(t *testing.T) {
 		defer h.cleanup()
 
 		userID := randomStatisticsUUID(t)
-		accuracy := newNumeric(t, 85.5)
+		accuracyFloat := 85.5
+		accuracyNumeric := newNumeric(t, accuracyFloat)
 		
 		request := dto.CreateStatisticsRequest{
 			UserID:            userID,
 			TotalWordsLearned: 100,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyFloat,
 			TotalTime:         3600,
 		}
 
 		expectedParams := db.CreateUserStatisticsParams{
 			UserID:            userID,
 			TotalWordsLearned: 100,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyNumeric,
 			TotalTime:         3600,
 		}
 
 		expectedStats := db.UserStatistic{
 			UserID:            userID,
 			TotalWordsLearned: 100,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyNumeric,
 			TotalTime:         3600,
 		}
 
@@ -306,26 +307,27 @@ func TestUserStatisticsService_Update(t *testing.T) {
 		defer h.cleanup()
 
 		userID := randomStatisticsUUID(t)
-		accuracy := newNumeric(t, 92.5)
+		accuracyFloat := 92.5
+		accuracyNumeric := newNumeric(t, accuracyFloat)
 		
 		request := dto.UpdateStatisticsRequest{
 			UserID:            userID,
 			TotalWordsLearned: 150,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyFloat,
 			TotalTime:         5000,
 		}
 
 		expectedParams := db.UpdateUserStatisticsParams{
 			UserID:            userID,
 			TotalWordsLearned: 150,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyNumeric,
 			TotalTime:         5000,
 		}
 
 		expectedStats := db.UserStatistic{
 			UserID:            userID,
 			TotalWordsLearned: 150,
-			Accuracy:          accuracy,
+			Accuracy:          accuracyNumeric,
 			TotalTime:         5000,
 		}
 

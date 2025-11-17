@@ -7,7 +7,6 @@ import (
 	"test-http/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,8 +24,8 @@ func TestUserWordSetsRepository_CRUD(t *testing.T) {
 
 	t.Run("Create/Get/Delete word set", func(t *testing.T) {
 		arg := CreateUserWordSetParams{
-			UserID:    pgtype.UUID{Bytes: userID, Valid: true},
-			WordSetID: pgtype.UUID{Bytes: setID, Valid: true},
+			UserID:    testutil.NewPgUUID(t, userID),
+			WordSetID: testutil.NewPgUUID(t, setID),
 		}
 		_, err := queries.CreateUserWordSet(ctx, arg)
 		require.Error(t, err)
@@ -44,8 +43,8 @@ func TestUserWordSetsRepository_EdgeCases(t *testing.T) {
 
 	t.Run("FK violation", func(t *testing.T) {
 		arg := CreateUserWordSetParams{
-			UserID:    pgtype.UUID{Bytes: uuid.New(), Valid: true},
-			WordSetID: pgtype.UUID{Bytes: uuid.New(), Valid: true},
+			UserID:    testutil.RandomPgUUID(t),
+			WordSetID: testutil.RandomPgUUID(t),
 		}
 		_, err := queries.CreateUserWordSet(ctx, arg)
 		require.Error(t, err, "Should return FK error")
@@ -53,8 +52,8 @@ func TestUserWordSetsRepository_EdgeCases(t *testing.T) {
 
 	t.Run("NULL violation", func(t *testing.T) {
 		arg := CreateUserWordSetParams{
-			UserID:    pgtype.UUID{},
-			WordSetID: pgtype.UUID{},
+			UserID:    testutil.EmptyPgUUID(),
+			WordSetID: testutil.EmptyPgUUID(),
 		}
 		_, err := queries.CreateUserWordSet(ctx, arg)
 		require.Error(t, err, "Should return NOT NULL error")
