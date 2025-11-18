@@ -76,10 +76,6 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	if _, err := uuid.Parse(userIDStr); err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
 	userID, err := helper.ToUUID(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
@@ -141,10 +137,6 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 	if userIDStr == "" {
 		log.Error("missing user id in query parameters")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
-	}
-
-	if _, err := uuid.Parse(userIDStr); err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	userID, err := helper.ToUUID(userIDStr)

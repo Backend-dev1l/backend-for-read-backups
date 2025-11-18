@@ -85,10 +85,6 @@ func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	if _, err := uuid.Parse(userIDStr); err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
 	userID, err := helper.ToUUID(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
