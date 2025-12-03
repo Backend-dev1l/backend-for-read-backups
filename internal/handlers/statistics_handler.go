@@ -7,6 +7,7 @@ import (
 	"test-http/internal/middleware"
 	"test-http/internal/service"
 	errorsPkg "test-http/pkg/errors_pkg"
+	"test-http/pkg/uuidconv"
 
 	"test-http/pkg/helper"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 )
 
 type StatisticsHandler struct {
@@ -84,9 +84,8 @@ func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	var pgUUID pgtype.UUID
-
-	if err := pgUUID.Set(userID); err != nil {
+	pgUUID, err := uuidconv.SetPgUUID(userID)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
@@ -156,9 +155,8 @@ func (s *StatisticsHandler) DeleteStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	var pgUUID pgtype.UUID
-
-	if err := pgUUID.Set(userID); err != nil {
+	pgUUID, err := uuidconv.SetPgUUID(userID)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 

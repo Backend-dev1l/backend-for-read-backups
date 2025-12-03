@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/jackc/pgtype"
+import "github.com/jackc/pgx/v5/pgtype"
 
 type CreateStatisticsRequest struct {
 	UserID            pgtype.UUID    `json:"user_id" validate:"required"`
@@ -22,9 +22,9 @@ type ListStatisticsRequest struct {
 }
 
 type GetStatisticsRequest struct {
-	UserID pgtype.UUID
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
 }
 
 type DeleteStatisticsRequest struct {
-	UserID pgtype.UUID
+	UserID pgtype.UUID `json:"user_id" validate:"required,uuid"`
 }

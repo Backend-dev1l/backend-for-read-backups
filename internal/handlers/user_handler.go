@@ -10,12 +10,12 @@ import (
 	errorsPkg "test-http/pkg/errors_pkg"
 	"test-http/pkg/fault"
 	"test-http/pkg/helper"
+	"test-http/pkg/uuidconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 )
 
 type UserHandler struct {
@@ -82,9 +82,8 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	var pgUUID pgtype.UUID
-
-	if err := pgUUID.Set(userID); err != nil {
+	pgUUID, err := uuidconv.SetPgUUID(userID)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
@@ -151,9 +150,8 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	var pgUUID pgtype.UUID
-
-	if err := pgUUID.Set(userID); err != nil {
+	pgUUID, err := uuidconv.SetPgUUID(userID)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
@@ -199,9 +197,8 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
-	var pgUUID pgtype.UUID
-
-	if err := pgUUID.Set(userID); err != nil {
+	pgUUID, err := uuidconv.SetPgUUID(userID)
+	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
