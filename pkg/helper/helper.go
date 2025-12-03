@@ -39,14 +39,6 @@ func writeFaultResponse(w http.ResponseWriter, f *fault.Fault) {
 	_ = json.NewEncoder(w).Encode(response)
 }
 
-func ToUUID(id string) (pgtype.UUID, error) {
-	var uuid pgtype.UUID
-	if err := uuid.Scan(id); err != nil {
-		return pgtype.UUID{}, err
-	}
-	return uuid, nil
-}
-
 func ToNumeric(accuracy float64) (pgtype.Numeric, error) {
 	var num pgtype.Numeric
 	if err := num.Scan(fmt.Sprintf("%f", accuracy)); err != nil {

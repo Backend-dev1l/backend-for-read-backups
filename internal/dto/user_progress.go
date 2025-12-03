@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/jackc/pgx/v5/pgtype"
+import "github.com/jackc/pgtype"
 
 type CreateUserProgressRequest struct {
 	UserID         pgtype.UUID `json:"user_id" validate:"required,uuid"`

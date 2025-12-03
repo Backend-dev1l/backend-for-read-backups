@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/jackc/pgx/v5/pgtype"
+import "github.com/jackc/pgtype"
 
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`

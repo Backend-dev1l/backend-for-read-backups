@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 )
 
 type StatisticsHandler struct {
@@ -46,15 +47,8 @@ func (s *StatisticsHandler) CreateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
-	log.Info("Decoded request", "user_id", req.UserID.String(), "total_words_learned", req.TotalWordsLearned, "accuracy", req.Accuracy, "total_time", req.TotalTime)
-
 	if err := s.validate.Struct(req); err != nil {
 		log.Error("validation failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
-	}
-
-	if !req.UserID.Valid {
-		log.Error("invalid user_id")
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
@@ -85,13 +79,19 @@ func (s *StatisticsHandler) GetStatistics(w http.ResponseWriter, r *http.Request
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userID, err := helper.ToUUID(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
+	var pgUUID pgtype.UUID
+
+	if err := pgUUID.Set(userID); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	statistics, err := s.service.GetByID(ctx, dto.GetStatisticsRequest{
-		UserID: userID,
+		UserID: pgUUID,
 	})
 	if err != nil {
 		log.Error("UserStatisticsService.GetByID failed", "err", err)
@@ -124,11 +124,6 @@ func (s *StatisticsHandler) UpdateStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	if !req.UserID.Valid {
-		log.Error("invalid user_id")
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
-	}
-
 	statistics, err := s.service.Update(ctx, req)
 	if err != nil {
 		log.Error("UserStatisticsService.Update failed", "err", err)
@@ -156,17 +151,19 @@ func (s *StatisticsHandler) DeleteStatistics(w http.ResponseWriter, r *http.Requ
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	if _, err := uuid.Parse(userIDStr); err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	userID, err := helper.ToUUID(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
+	var pgUUID pgtype.UUID
+
+	if err := pgUUID.Set(userID); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	if err := s.service.Delete(ctx, dto.DeleteStatisticsRequest{
-		UserID: userID,
+		UserID: pgUUID,
 	}); err != nil {
 		log.Error("UserStatisticsService.Delete failed", "err", err)
 		return helper.HTTPError(w, errorsPkg.ContextDeletingUserStatisticsMissing.New())

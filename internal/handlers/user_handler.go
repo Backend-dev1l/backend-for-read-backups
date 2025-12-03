@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 )
 
 type UserHandler struct {
@@ -76,13 +77,19 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userID, err := helper.ToUUID(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
+	var pgUUID pgtype.UUID
+
+	if err := pgUUID.Set(userID); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	user, err := u.service.GetByID(ctx, dto.GetUserByIDRequest{
-		ID: userID,
+		ID: pgUUID,
 	})
 	if err != nil {
 		log.Error("UserService.GetByID failed", "err", err)
@@ -139,13 +146,19 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	userID, err := helper.ToUUID(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
+	var pgUUID pgtype.UUID
+
+	if err := pgUUID.Set(userID); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	if err := u.service.Delete(ctx, dto.DeleteUserRequest{
-		ID: userID,
+		ID: pgUUID,
 	}); err != nil {
 		log.Error("UserService.Delete failed", "err", err)
 		return helper.HTTPError(w, fault.UnhandledError.Err())
@@ -181,17 +194,19 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
-	if _, err := uuid.Parse(userIDStr); err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
-	}
-
-	userID, err := helper.ToUUID(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
+	var pgUUID pgtype.UUID
+
+	if err := pgUUID.Set(userID); err != nil {
+		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+	}
+
 	user, err := u.service.Update(ctx, dto.UpdateUserRequest{
-		ID: userID,
+		ID: pgUUID,
 	})
 	if err != nil {
 		log.Error("UserService.Update failed", "err", err)
