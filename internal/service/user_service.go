@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"test-http/internal/db"
 	"test-http/internal/dto"
-	"test-http/internal/lib"
 	errorsPkg "test-http/pkg/errors_pkg"
 )
 
