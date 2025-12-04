@@ -9,7 +9,7 @@ import (
 	"test-http/internal/service"
 	errorsPkg "test-http/pkg/errors_pkg"
 	"test-http/pkg/fault"
-	"test-http/pkg/helper"
+
 	"test-http/pkg/uuidconv"
 
 	"github.com/go-chi/chi/v5"
@@ -40,12 +40,12 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	var req dto.CreateUserRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		u.log.Error("DecodeJSON failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
+		return fault.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := u.validate.Struct(req); err != nil {
 		log.Error("validation failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+		return fault.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
 	user, err := u.service.Create(ctx, dto.CreateUserRequest{
@@ -54,7 +54,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	})
 	if err != nil {
 		log.Error("UserService.Create failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ContextCreatingUserMissing.Err())
+		return fault.HTTPError(w, errorsPkg.ContextCreatingUserMissing.Err())
 	}
 
 	render.Status(r, http.StatusCreated)
@@ -74,17 +74,17 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		log.Error("missing user id in query parameters")
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+		return fault.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	pgUUID, err := uuidconv.SetPgUUID(userID)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	user, err := u.service.GetByID(ctx, dto.GetUserByIDRequest{
@@ -92,7 +92,7 @@ func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	})
 	if err != nil {
 		log.Error("UserService.GetByID failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
+		return fault.HTTPError(w, errorsPkg.ContextGettingUserMissing.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -114,7 +114,7 @@ func (u *UserHandler) UserEmail(w http.ResponseWriter, r *http.Request) error {
 	userEmail := chi.URLParam(r, "email")
 	if userEmail == "" {
 		log.Error("missing email in query parameters")
-		return helper.HTTPError(w, fault.UnhandledError.Err())
+		return fault.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	user, err := u.service.GetByEmail(ctx, dto.GetUserByEmailRequest{
@@ -122,7 +122,7 @@ func (u *UserHandler) UserEmail(w http.ResponseWriter, r *http.Request) error {
 	})
 	if err != nil {
 		log.Error("UserService.GetByEmail failed", "email", userEmail, "err", err)
-		return helper.HTTPError(w, fault.UnhandledError.Err())
+		return fault.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -142,24 +142,24 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		log.Error("missing user id in query parameters")
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+		return fault.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	pgUUID, err := uuidconv.SetPgUUID(userID)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	if err := u.service.Delete(ctx, dto.DeleteUserRequest{
 		ID: pgUUID,
 	}); err != nil {
 		log.Error("UserService.Delete failed", "err", err)
-		return helper.HTTPError(w, fault.UnhandledError.Err())
+		return fault.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)
@@ -178,28 +178,28 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 	var req dto.UpdateUserRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("DecodeJSON failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.DecodeFailed.Err())
+		return fault.HTTPError(w, errorsPkg.DecodeFailed.Err())
 	}
 
 	if err := u.validate.Struct(req); err != nil {
 		log.Error("validation failed", "err", err)
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+		return fault.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		log.Error("missing user id in query parameters")
-		return helper.HTTPError(w, errorsPkg.ValidationError.Err())
+		return fault.HTTPError(w, errorsPkg.ValidationError.Err())
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	pgUUID, err := uuidconv.SetPgUUID(userID)
 	if err != nil {
-		return helper.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
+		return fault.HTTPError(w, errorsPkg.UUIDParsingFailed.Err())
 	}
 
 	user, err := u.service.Update(ctx, dto.UpdateUserRequest{
@@ -207,7 +207,7 @@ func (u *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 	})
 	if err != nil {
 		log.Error("UserService.Update failed", "err", err)
-		return helper.HTTPError(w, fault.UnhandledError.Err())
+		return fault.HTTPError(w, fault.UnhandledError.Err())
 	}
 
 	render.Status(r, http.StatusOK)

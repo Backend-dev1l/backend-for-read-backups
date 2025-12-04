@@ -3,7 +3,6 @@ package fault
 
 import (
 	"errors"
-	"test-http/pkg/fault"
 
 	"encoding/json"
 
@@ -83,7 +82,7 @@ func HTTPError(w http.ResponseWriter, err error) error {
 	}
 
 	// Use a generic unhandled fault as a fallback.
-	fallbackFault := fault.UnhandledError.Err()
+	fallbackFault := UnhandledError.Err()
 	writeFaultResponse(w, fallbackFault)
 	return nil
 }
